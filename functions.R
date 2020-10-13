@@ -215,8 +215,293 @@ trophic.plots = function(PLB.return, PLB.bMLE.b, PLB.minLL.b, df.input, mgpVals,
   }
 }
 
-
-
+slope_regAndFunc = function(carn.df, herb.df){
+  # Paul - Carnivore, Raja Ampat
+  pc.carn.ra.df <- carn.df %>%
+    filter(observer == "PC") %>%
+    filter(region == "raja_ampat")
+  pc.carn.ra.input <- set.params(pc.carn.ra.df$biomass_kg)
+  PLB.return.pc.carn.ra <- mle_b(region=NA, x=pc.carn.ra.input$biomass, log_x=pc.carn.ra.input$log.biomass, sum_log_x=pc.carn.ra.input$sum.log.biomass,
+                   x_min=pc.carn.ra.input$min.biomass, x_max=pc.carn.ra.input$max.biomass)
+  PLB.bMLE.pc.carn.ra.b <- PLB.return.pc.carn.ra[[1]] 
+  PLB.minLL.pc.carn.ra.b <- PLB.return.pc.carn.ra[[2]]
+  pc.carn.ra.b.In95 <- slope.conf.int(PLB.bMLE.pc.carn.ra.b, PLB.minLL.pc.carn.ra.b$minimum, pc.carn.ra.input)
+  divers.tp.df <- data.frame(obs_region = "PC_RA",
+                             tp = "Carnivore",
+                             b = PLB.bMLE.pc.carn.ra.b,
+                             b_lwr = pc.carn.ra.b.In95[1],
+                             b_upr = pc.carn.ra.b.In95[2])
   
+  # Paul - Herbivore, Raja Ampat
+  pc.herb.ra.df <- herb.df %>%
+    filter(observer == "PC") %>%
+    filter(region == "raja_ampat")
+  pc.herb.ra.input <- set.params(pc.herb.ra.df$biomass_kg)
+  PLB.return.pc.herb.ra <- mle_b(region=NA, x=pc.herb.ra.input$biomass, log_x=pc.herb.ra.input$log.biomass, sum_log_x=pc.herb.ra.input$sum.log.biomass,
+                   x_min=pc.herb.ra.input$min.biomass, x_max=pc.herb.ra.input$max.biomass)
+  PLB.bMLE.pc.herb.ra.b <- PLB.return.pc.herb.ra[[1]] 
+  PLB.minLL.pc.herb.ra.b <- PLB.return.pc.herb.ra[[2]]
+  pc.herb.ra.b.In95 <- slope.conf.int(PLB.bMLE.pc.herb.ra.b, PLB.minLL.pc.herb.ra.b$minimum, pc.herb.ra.input)
+  tmp <- data.frame(obs_region = "PC_RA",
+                    tp = "Herbivore",
+                    b = PLB.bMLE.pc.herb.ra.b,
+                    b_lwr = pc.herb.ra.b.In95[1],
+                    b_upr = pc.herb.ra.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
   
+  # Paul - Carnivore, Wakatobi
+  pc.carn.wa.df <- carn.df %>%
+    filter(observer == "PC") %>%
+    filter(region == "wakatobi")
+  pc.carn.wa.input <- set.params(pc.carn.wa.df$biomass_kg)
+  PLB.return.pc.carn.wa <- mle_b(region=NA, x=pc.carn.wa.input$biomass, log_x=pc.carn.wa.input$log.biomass, sum_log_x=pc.carn.wa.input$sum.log.biomass,
+                   x_min=pc.carn.wa.input$min.biomass, x_max=pc.carn.wa.input$max.biomass)
+  PLB.bMLE.pc.carn.wa.b <- PLB.return.pc.carn.wa[[1]] 
+  PLB.minLL.pc.carn.wa.b <- PLB.return.pc.carn.wa[[2]]
+  pc.carn.wa.b.In95 <- slope.conf.int(PLB.bMLE.pc.carn.wa.b, PLB.minLL.pc.carn.wa.b$minimum, pc.carn.wa.input)
+  tmp <- data.frame(obs_region = "PC_WA",
+                    tp = "Carnivore",
+                    b = PLB.bMLE.pc.carn.wa.b,
+                    b_lwr = pc.carn.wa.b.In95[1],
+                    b_upr = pc.carn.wa.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
+  
+  # Paul - Herbivore, Wakatobi
+  pc.herb.wa.df <- herb.df %>%
+    filter(observer == "PC") %>%
+    filter(region == "wakatobi")
+  pc.herb.wa.input <- set.params(pc.herb.wa.df$biomass_kg)
+  PLB.return.pc.herb.wa <- mle_b(region=NA, x=pc.herb.wa.input$biomass, log_x=pc.herb.wa.input$log.biomass, sum_log_x=pc.herb.wa.input$sum.log.biomass,
+                   x_min=pc.herb.wa.input$min.biomass, x_max=pc.herb.wa.input$max.biomass)
+  PLB.bMLE.pc.herb.wa.b <- PLB.return.pc.herb.wa[[1]] 
+  PLB.minLL.pc.herb.wa.b <- PLB.return.pc.herb.wa[[2]]
+  pc.herb.wa.b.In95 <- slope.conf.int(PLB.bMLE.pc.herb.wa.b, PLB.minLL.pc.herb.wa.b$minimum, pc.herb.wa.input)
+  tmp <- data.frame(obs_region = "PC_WA",
+                    tp = "Herbivore",
+                    b = PLB.bMLE.pc.herb.wa.b,
+                    b_lwr = pc.herb.wa.b.In95[1],
+                    b_upr = pc.herb.wa.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
+  
+  # Paul - Carnivore, Lombok
+  pc.carn.lo.df <- carn.df %>%
+    filter(observer == "PC") %>%
+    filter(region == "lombok")
+  pc.carn.lo.input <- set.params(pc.carn.lo.df$biomass_kg)
+  PLB.return.pc.carn.lo <- mle_b(region=NA, x=pc.carn.lo.input$biomass, log_x=pc.carn.lo.input$log.biomass, sum_log_x=pc.carn.lo.input$sum.log.biomass,
+                   x_min=pc.carn.lo.input$min.biomass, x_max=pc.carn.lo.input$max.biomass)
+  PLB.bMLE.pc.carn.lo.b <- PLB.return.pc.carn.lo[[1]] 
+  PLB.minLL.pc.carn.lo.b <- PLB.return.pc.carn.lo[[2]]
+  pc.carn.lo.b.In95 <- slope.conf.int(PLB.bMLE.pc.carn.lo.b, PLB.minLL.pc.carn.lo.b$minimum, pc.carn.lo.input)
+  tmp <- data.frame(obs_region = "PC_LO",
+                    tp = "Carnivore",
+                    b = PLB.bMLE.pc.carn.lo.b,
+                    b_lwr = pc.carn.lo.b.In95[1],
+                    b_upr = pc.carn.lo.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
+  
+  # Paul - Herbivore, Lombok
+  pc.herb.lo.df <- herb.df %>%
+    filter(observer == "PC") %>%
+    filter(region == "lombok")
+  pc.herb.lo.input <- set.params(pc.herb.lo.df$biomass_kg)
+  PLB.return.pc.herb.lo <- mle_b(region=NA, x=pc.herb.lo.input$biomass, log_x=pc.herb.lo.input$log.biomass, sum_log_x=pc.herb.lo.input$sum.log.biomass,
+                   x_min=pc.herb.lo.input$min.biomass, x_max=pc.herb.lo.input$max.biomass)
+  PLB.bMLE.pc.herb.lo.b <- PLB.return.pc.herb.lo[[1]] 
+  PLB.minLL.pc.herb.lo.b <- PLB.return.pc.herb.lo[[2]]
+  pc.herb.lo.b.In95 <- slope.conf.int(PLB.bMLE.pc.herb.lo.b, PLB.minLL.pc.herb.lo.b$minimum, pc.herb.lo.input)
+  tmp <- data.frame(obs_region = "PC_LO",
+                    tp = "Herbivore",
+                    b = PLB.bMLE.pc.herb.lo.b,
+                    b_lwr = pc.herb.lo.b.In95[1],
+                    b_upr = pc.herb.lo.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
+  
+  # Ubun - Carnivore, Raja Ampat
+  fs.carn.ra.df <- carn.df %>%
+    filter(observer == "FS") %>%
+    filter(region == "raja_ampat")
+  fs.carn.ra.input <- set.params(fs.carn.ra.df$biomass_kg)
+  PLB.return.fs.carn.ra <- mle_b(region=NA, x=fs.carn.ra.input$biomass, log_x=fs.carn.ra.input$log.biomass, sum_log_x=fs.carn.ra.input$sum.log.biomass,
+                   x_min=fs.carn.ra.input$min.biomass, x_max=fs.carn.ra.input$max.biomass)
+  PLB.bMLE.fs.carn.ra.b <- PLB.return.fs.carn.ra[[1]] 
+  PLB.minLL.fs.carn.ra.b <- PLB.return.fs.carn.ra[[2]]
+  fs.carn.ra.b.In95 <- slope.conf.int(PLB.bMLE.fs.carn.ra.b, PLB.minLL.fs.carn.ra.b$minimum, fs.carn.ra.input)
+  tmp <- data.frame(obs_region = "FS_RA",
+                    tp = "Carnivore",
+                    b = PLB.bMLE.fs.carn.ra.b,
+                    b_lwr = fs.carn.ra.b.In95[1],
+                    b_upr = fs.carn.ra.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
+  
+  # Ubun - Herbivore, Raja Ampat
+  fs.herb.ra.df <- herb.df %>%
+    filter(observer == "FS") %>%
+    filter(region == "raja_ampat")
+  fs.herb.ra.input <- set.params(fs.herb.ra.df$biomass_kg)
+  PLB.return.fs.herb.ra <- mle_b(region=NA, x=fs.herb.ra.input$biomass, log_x=fs.herb.ra.input$log.biomass, sum_log_x=fs.herb.ra.input$sum.log.biomass,
+                   x_min=fs.herb.ra.input$min.biomass, x_max=fs.herb.ra.input$max.biomass)
+  PLB.bMLE.fs.herb.ra.b <- PLB.return.fs.herb.ra[[1]] 
+  PLB.minLL.fs.herb.ra.b <- PLB.return.fs.herb.ra[[2]]
+  fs.herb.ra.b.In95 <- slope.conf.int(PLB.bMLE.fs.herb.ra.b, PLB.minLL.fs.herb.ra.b$minimum, fs.herb.ra.input)
+  tmp <- data.frame(obs_region = "FS_RA",
+                    tp = "Herbivore",
+                    b = PLB.bMLE.fs.herb.ra.b,
+                    b_lwr = fs.herb.ra.b.In95[1],
+                    b_upr = fs.herb.ra.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
+  
+  # Ubun - Carnivore, Lombok
+  fs.carn.lo.df <- carn.df %>%
+    filter(observer == "FS") %>%
+    filter(region == "lombok")
+  fs.carn.lo.input <- set.params(fs.carn.lo.df$biomass_kg)
+  PLB.return.fs.carn.lo <- mle_b(region=NA, x=fs.carn.lo.input$biomass, log_x=fs.carn.lo.input$log.biomass, sum_log_x=fs.carn.lo.input$sum.log.biomass,
+                   x_min=fs.carn.lo.input$min.biomass, x_max=fs.carn.lo.input$max.biomass)
+  PLB.bMLE.fs.carn.lo.b <- PLB.return.fs.carn.lo[[1]] 
+  PLB.minLL.fs.carn.lo.b <- PLB.return.fs.carn.lo[[2]]
+  fs.carn.lo.b.In95 <- slope.conf.int(PLB.bMLE.fs.carn.lo.b, PLB.minLL.fs.carn.lo.b$minimum, fs.carn.lo.input)
+  tmp <- data.frame(obs_region = "FS_LO",
+                    tp = "Carnivore",
+                    b = PLB.bMLE.fs.carn.lo.b,
+                    b_lwr = fs.carn.lo.b.In95[1],
+                    b_upr = fs.carn.lo.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
+  
+  # Ubun - Herbivore, Lombok
+  fs.herb.lo.df <- herb.df %>%
+    filter(observer == "FS") %>%
+    filter(region == "lombok")
+  fs.herb.lo.input <- set.params(fs.herb.lo.df$biomass_kg)
+  PLB.return.fs.herb.lo <- mle_b(region=NA, x=fs.herb.lo.input$biomass, log_x=fs.herb.lo.input$log.biomass, sum_log_x=fs.herb.lo.input$sum.log.biomass,
+                   x_min=fs.herb.lo.input$min.biomass, x_max=fs.herb.lo.input$max.biomass)
+  PLB.bMLE.fs.herb.lo.b <- PLB.return.fs.herb.lo[[1]] 
+  PLB.minLL.fs.herb.lo.b <- PLB.return.fs.herb.lo[[2]]
+  fs.herb.lo.b.In95 <- slope.conf.int(PLB.bMLE.fs.herb.lo.b, PLB.minLL.fs.herb.lo.b$minimum, fs.herb.lo.input)
+  tmp <- data.frame(obs_region = "FS_LO",
+                    tp = "Herbivore",
+                    b = PLB.bMLE.fs.herb.lo.b,
+                    b_lwr = fs.herb.lo.b.In95[1],
+                    b_upr = fs.herb.lo.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
+  
+  # Choro - Carnivore, Lombok
+  ch.carn.lo.df <- carn.df %>%
+    filter(observer == "ch") %>%
+    filter(region == "lombok")
+  ch.carn.lo.input <- set.params(ch.carn.lo.df$biomass_kg)
+  PLB.return.ch.carn.lo <- mle_b(region=NA, x=ch.carn.lo.input$biomass, log_x=ch.carn.lo.input$log.biomass, sum_log_x=ch.carn.lo.input$sum.log.biomass,
+                   x_min=ch.carn.lo.input$min.biomass, x_max=ch.carn.lo.input$max.biomass)
+  PLB.bMLE.ch.carn.lo.b <- PLB.return.ch.carn.lo[[1]] 
+  PLB.minLL.ch.carn.lo.b <- PLB.return.ch.carn.lo[[2]]
+  ch.carn.lo.b.In95 <- slope.conf.int(PLB.bMLE.ch.carn.lo.b, PLB.minLL.ch.carn.lo.b$minimum, ch.carn.lo.input)
+  tmp <- data.frame(obs_region = "CH_LO",
+                    tp = "Carnivore",
+                    b = PLB.bMLE.ch.carn.lo.b,
+                    b_lwr = ch.carn.lo.b.In95[1],
+                    b_upr = ch.carn.lo.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
+  
+  # Choro - Herbivore, Lombok
+  ch.herb.lo.df <- herb.df %>%
+    filter(observer == "ch") %>%
+    filter(region == "lombok")
+  ch.herb.lo.input <- set.params(ch.herb.lo.df$biomass_kg)
+  PLB.return.ch.herb.lo <- mle_b(region=NA, x=ch.herb.lo.input$biomass, log_x=ch.herb.lo.input$log.biomass, sum_log_x=ch.herb.lo.input$sum.log.biomass,
+                   x_min=ch.herb.lo.input$min.biomass, x_max=ch.herb.lo.input$max.biomass)
+  PLB.bMLE.ch.herb.lo.b <- PLB.return.ch.herb.lo[[1]] 
+  PLB.minLL.ch.herb.lo.b <- PLB.return.ch.herb.lo[[2]]
+  ch.herb.lo.b.In95 <- slope.conf.int(PLB.bMLE.ch.herb.lo.b, PLB.minLL.ch.herb.lo.b$minimum, ch.herb.lo.input)
+  tmp <- data.frame(obs_region = "CH_LO",
+                    tp = "Herbivore",
+                    b = PLB.bMLE.ch.herb.lo.b,
+                    b_lwr = ch.herb.lo.b.In95[1],
+                    b_upr = ch.herb.lo.b.In95[2])
+  divers.tp.df <- rbind(divers.tp.df, tmp)
+  
+  divers.tp.df$region <- c("Raja Ampat", "Raja Ampat", "Wakatobi", "Wakatobi", "Lombok", "Lombok", "Raja Ampat", "Raja Ampat",
+                           "Lombok", "Lombok", "Lombok", "Lombok")
+                          
+  divers.tp.df <- divers.tp.df %>%
+    mutate(obs_region = fct_relevel(obs_region, "PC_RA","FS_RA","PC_WA","PC_LO","FS_LO","CH_LO")) 
+  
+  p <- ggplot() +
+    geom_pointrange(data = divers.tp.df, aes(x = obs_region, y = b, color = tp, shape = region, ymin = b_lwr, ymax = b_upr)) +
+    theme_classic() +
+    labs(x = "Observer", y = expression(paste("Size spectra (", italic("b"),")"))) +
+    scale_x_discrete(labels = c("PC", "FS", "PC", "PC", "FS", "PS")) +
+    theme(legend.title = element_blank())
+  
+  return(p)
+}
+
+slope_reg = function(){
+  # Paul - Raja Ampat
+  pc.ra.df <- ra %>%
+    filter(observer == "PC")
+  pc.ra.input <- set.params(pc.ra.df$biomass_kg)
+  PLB.return.pc.ra <- mle_b(region="raja_ampat", x=pc.ra.input$biomass, log_x=pc.ra.input$log.biomass, sum_log_x=pc.ra.input$sum.log.biomass,
+                   x_min=pc.ra.input$min.biomass, x_max=pc.ra.input$max.biomass)
+  PLB.bMLE.pc.ra.b <- PLB.return.pc.ra[[1]] 
+  PLB.minLL.pc.ra.b <- PLB.return.pc.ra[[2]]
+  pc.ra.b.In95 <- slope.conf.int(PLB.bMLE.pc.ra.b, PLB.minLL.pc.ra.b$minimum, pc.ra.input)
+  
+  # Ubun - Raja Ampat
+  fs.ra.df <- ra %>%
+    filter(observer == "FS")
+  fs.ra.input <- set.params(fs.ra.df$biomass_kg)
+  PLB.return.fs.ra <- mle_b(region="raja_ampat", x=fs.ra.input$biomass, log_x=fs.ra.input$log.biomass, sum_log_x=fs.ra.input$sum.log.biomass,
+                   x_min=fs.ra.input$min.biomass, x_max=fs.ra.input$max.biomass)
+  PLB.bMLE.fs.ra.b <- PLB.return.fs.ra[[1]] 
+  PLB.minLL.fs.ra.b <- PLB.return.fs.ra[[2]]
+  fs.ra.b.In95 <- slope.conf.int(PLB.bMLE.fs.ra.b, PLB.minLL.fs.ra.b$minimum, fs.ra.input)
+  
+  # Paul - Lombok
+  pc.lo.df <- lo %>%
+    filter(observer == "PC")
+  pc.lo.input <- set.params(pc.lo.df$biomass_kg)
+  PLB.return.pc.lo <- mle_b(region="lombok", x=pc.lo.input$biomass, log_x=pc.lo.input$log.biomass, sum_log_x=pc.lo.input$sum.log.biomass,
+                   x_min=pc.lo.input$min.biomass, x_max=pc.lo.input$max.biomass)
+  PLB.bMLE.pc.lo.b <- PLB.return.pc.lo[[1]] 
+  PLB.minLL.pc.lo.b <- PLB.return.pc.lo[[2]]
+  pc.lo.b.In95 <- slope.conf.int(PLB.bMLE.pc.lo.b, PLB.minLL.pc.lo.b$minimum, pc.lo.input)
+  
+  # Ubun - Lombok
+  fs.lo.df <- lo %>%
+    filter(observer == "FS")
+  fs.lo.input <- set.params(fs.lo.df$biomass_kg)
+  PLB.return.fs.lo <- mle_b(region="lombok", x=fs.lo.input$biomass, log_x=fs.lo.input$log.biomass, sum_log_x=fs.lo.input$sum.log.biomass,
+                   x_min=fs.lo.input$min.biomass, x_max=fs.lo.input$max.biomass)
+  PLB.bMLE.fs.lo.b <- PLB.return.fs.lo[[1]] 
+  PLB.minLL.fs.lo.b <- PLB.return.fs.lo[[2]]
+  fs.lo.b.In95 <- slope.conf.int(PLB.bMLE.fs.lo.b, PLB.minLL.fs.lo.b$minimum, fs.lo.input)
+  
+  # Choro - Lombok
+  ch.lo.df <- lo %>%
+    filter(observer == "ch")
+  ch.lo.input <- set.params(ch.lo.df$biomass_kg)
+  PLB.return.ch.lo <- mle_b(region="lombok", x=ch.lo.input$biomass, log_x=ch.lo.input$log.biomass, sum_log_x=ch.lo.input$sum.log.biomass,
+                   x_min=ch.lo.input$min.biomass, x_max=ch.lo.input$max.biomass)
+  PLB.bMLE.ch.lo.b <- PLB.return.ch.lo[[1]] 
+  PLB.minLL.ch.lo.b <- PLB.return.ch.lo[[2]]
+  ch.lo.b.In95 <- slope.conf.int(PLB.bMLE.ch.lo.b, PLB.minLL.ch.lo.b$minimum, ch.lo.input)
+  
+  divers.df <- data.frame(obs_region = c("PC_RA","FS_RA","PC_LO","FS_LO","PS_LO"),
+                          region  = c("Raja Ampat", "Raja Ampat", "Lombok", "Lombok", "Lombok"),
+                          b = c(PLB.bMLE.pc.ra.b, PLB.bMLE.fs.ra.b, PLB.bMLE.pc.lo.b, PLB.bMLE.fs.lo.b, PLB.bMLE.ch.lo.b),
+                          b_lwr = c(pc.ra.b.In95[1], fs.ra.b.In95[1], pc.lo.b.In95[1], fs.lo.b.In95[1], ch.lo.b.In95[1]),
+                          b_upr = c(pc.ra.b.In95[2], fs.ra.b.In95[2], pc.lo.b.In95[2], fs.lo.b.In95[2], ch.lo.b.In95[2]))
+  
+  divers.df <- divers.df %>%
+    mutate(obs_region = fct_relevel(obs_region, "PC_RA","FS_RA","PC_LO","FS_LO","PS_LO"))
+  
+  p <- ggplot() +
+    geom_pointrange(data = divers.df, aes(x = obs_region, y = b, ymin = b_lwr, ymax = b_upr, color = region)) +
+    theme_classic() +
+    labs(x = "Observer", y = expression(paste("Size spectra (", italic("b"),")"))) +
+    scale_x_discrete(labels = c("PC_RA" = "PC", "FS_RA" = "FS", "PC_LO" = "PC", "FS_LO" = "FS", "PS_LO" = "PS")) +
+    theme(legend.title = element_blank())
+  
+  return(p)
+}
   
