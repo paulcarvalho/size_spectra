@@ -290,10 +290,9 @@ cooksd <- cooks.distance(lm.1)
 plot(cooksd, pch="*")
 abline(h = 4 * mean(cooksd, na.rm=T), col = "red")
 text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")  # add labels
-
 min(covariates.df$b)
 
-# remove outlier
+# remove outliers
 tmp.covariates.df <- covariates.df[-c(5,16),] 
 ggplot() +
   geom_point(data=tmp.covariates.df, aes(x=log(Grav_tot), y=b, color=region)) +
@@ -303,35 +302,8 @@ ggplot() +
   scale_color_discrete(name=NULL, labels=c("Lombok","Raja Ampat","Wakatobi")) +
   # scale_x_continuous(limits = c(0,900), expand = c(0,0)) +
   theme(legend.position = c(0.9,0.9))
-
 lm.2 <- lm(tmp.covariates.df$b ~ log(tmp.covariates.df$Grav_tot))
 summary(lm.2)
-
-# slope (b) in relation to biomass (kg/ha) =============================================================
-
-# calculate the mean kg/ha for each site
-tmp <- fish.df %>%
-  dplyr::group_by(site_name, transect, observer) %>%
-  dplyr::summarize(biomass_250m_sq = sum(biomass_kg)) %>%
-  dplyr::group_by(site_name) %>%
-  dplyr::summarize(mean_bio_density = mean(biomass_250m_sq)) %>%
-  mutate(mean_bio_hectare = mean_bio_density * 40) %>%
-  dplyr::select(site_name, mean_bio_hectare)
-
-covariates.df <- covariates.df %>%
-    left_join(., tmp, by = "site_name")
-
-ggplot() +
-  geom_point(data=covariates.df, aes(x=mean_bio_hectare, y=b, color=region)) +
-  geom_smooth(data=covariates.df, aes(x=mean_bio_hectare, y=b), color="black", method="lm") +
-  theme_classic() +
-  labs(x="Mean biomass (kg/ha)", y="Size spectra slope (b)") +
-  scale_color_discrete(name=NULL, labels=c("Lombok","Raja Ampat","Wakatobi")) +
-  scale_x_continuous(limits = c(0,3000), expand = c(0,0)) +
-  theme(legend.position = c(0.9,0.9))
-  
-lm.3 <- lm(covariates.df$b ~ covariates.df$mean_bio_hectare)
-summary(lm.3)
 
 # GAMs =================================================================================================
 
