@@ -207,15 +207,38 @@ lob_plot <- ggplot() +
 # Values of b to test to obtain confidence interval. For the real movement data
 # sets in Table 2 of Edwards (2011) the intervals were symmetric, so make a
 # symmetric interval here.
-bvec = seq(PLB.bMLE.wa.b - 0.5, PLB.bMLE.wa.b + 0.5, 0.00001) 
+bvec = seq(PLB.bMLE.lo.b - 0.5, PLB.bMLE.lo.b + 0.5, 0.00001) 
 PLB.LLvals = vector(length=length(bvec))  # negative log-likelihood for bvec
 for(i in 1:length(bvec)){
-  PLB.LLvals[i] = negLL.PLB(bvec[i], x=wa.input$biomass, n=length(wa.input$biomass), xmin=wa.input$min.biomass,
-  xmax=wa.input$max.biomass, sumlogx=wa.input$sum.log.biomass)   
+  PLB.LLvals[i] = negLL.PLB(bvec[i], x=lo.input$biomass, n=length(lo.input$biomass), xmin=lo.input$min.biomass,
+  xmax=lo.input$max.biomass, sumlogx=lo.input$sum.log.biomass)   
 }
-critVal = PLB.minNegLL.wa.b  + qchisq(0.95,1)/2 # 1 degree of freedom, Hilborn and Mangel (1997) p162.
+critVal = PLB.minNegLL.lo.b  + qchisq(0.95,1)/2 # 1 degree of freedom, Hilborn and Mangel (1997) p162.
 bIn95 = bvec[ PLB.LLvals < critVal ]
-wabIn95 <- c(min(bIn95), max(bIn95))
+lobIn95 <- c(min(bIn95), max(bIn95))
+
+# Plot estimated size spectra slopes with confidence intervals =========================================
+slopes_ci_df <- data.frame(region = c("Raja Ampat", "Wakatobi", "Lombok"),
+                           b = c(PLB.bMLE.ra.b, PLB.bMLE.wa.b, PLB.bMLE.lo.b),
+                           b_lo = c(rabIn95[1], wabIn95[1],lobIn95[1]),
+                           b_up = c(rabIn95[2], wabIn95[2],lobIn95[2]))
+
+ggplot() +
+  geom_point(data = slopes_ci_df, aes(x = c(1,1,1), y = b, color = region)) +
+  geom_errorbar(data = slopes_ci_df, aes(x = c(1,1,1), ymin = b_lo, ymax = b_up, color = region), width = 0.05) +
+  ylab(expression(italic("b"))) +
+  xlab("") +
+  scale_x_continuous(limits = c(0.9,1.5)) +
+  theme_bw() +
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        legend.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        panel.border = element_blank(),
+        axis.line.y = element_line(color = "black"),
+        legend.position = c(0.4,0.5))
 
 # calculate size spectra slope for each study site =====================================================
 site.names <- as.character(unique(fish.df$site_name)) # save site names as a vector
