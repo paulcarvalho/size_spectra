@@ -94,22 +94,23 @@ PLB.minLL.ra.b <- PLB.return.ra[[2]]
 # plot and find 95% confidence intervals for MLE method.
 PLB.minNegLL.ra.b <- PLB.minLL.ra.b$minimum
 x <- ra.input$biomass
-x.PLB = seq(min(ra.input$biomass), max(ra.input$biomass), length=1000) # x values to plot PLB. Note
+rax.PLB = seq(min(ra.input$biomass), max(ra.input$biomass), length=1000) # x values to plot PLB. Note
                                                                          # that these encompass the data, and are not based
                                                                          # on the binning (in MEE Figure 6 the line starts as
                                                                          # min(x), not the first bin.
-y.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.ra.b, xmin = min(x.PLB),
+ray.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.ra.b, xmin = min(x.PLB),
     xmax = max(x.PLB))) * length(ra.input$biomass)
 spectra.text <- as.character(round(PLB.bMLE.ra.b, 2))
 rab_plot <- ggplot() +
-  geom_point(aes(x = (sort(ra.input$biomass, decreasing=TRUE)), y = (1:length(ra.input$biomass))), size = 2, alpha = 0.2) +
-  xlab("") +
+  geom_point(aes(x = (sort(ra.input$biomass, decreasing=TRUE)), y = (1:length(ra.input$biomass))),
+             color = "#E69F00", size = 2, alpha = 0.3) +
+  xlab(expression(paste("Body sizes, ", italic("x"), " (kg)"))) +
   ylab(expression(paste("Number of body sizes", " ">=" ", italic("x")))) +
   xlim((c(ra.input$min.biomass, ra.input$max.biomass))) +
   ylim((c(1, length(ra.input$biomass)))) +
   scale_y_continuous(trans = 'log10') +
   scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10)) +
-  geom_line(aes(x = x.PLB, y = y.PLB), col = 'red', lwd = 1) +
+  geom_line(aes(x = rax.PLB, y = ray.PLB), col = 'black', lwd = 1) +
   annotate("text", x=0.0722, y=15, label="Raja Ampat") +
   annotate("text", x=0.07, y=5, label = expression(paste(italic("b = "), -1.58))) +
   theme_classic()
@@ -139,24 +140,25 @@ PLB.minLL.wa.b <- PLB.return.wa[[2]]
 # plot and find 95% confidence intervals for MLE method.
 PLB.minNegLL.wa.b <- PLB.minLL.wa.b$minimum
 x <- wa.input$biomass
-x.PLB = seq(min(wa.input$biomass), max(wa.input$biomass), length=1000) # x values to plot PLB. Note
+wax.PLB = seq(min(wa.input$biomass), max(wa.input$biomass), length=1000) # x values to plot PLB. Note
                                                                          # that these encompass the data, and are not based
                                                                          # on the binning (in MEE Figure 6 the line starts as
                                                                          # min(x), not the first bin.
-y.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.wa.b, xmin = min(x.PLB),
+way.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.wa.b, xmin = min(x.PLB),
     xmax = max(x.PLB))) * length(wa.input$biomass)
 spectra.text <- as.character(round(PLB.bMLE.wa.b, 2))
 wab_plot <- ggplot() +
-  geom_point(aes(x = (sort(wa.input$biomass, decreasing=TRUE)), y = (1:length(wa.input$biomass))), size = 2, alpha = 0.2) +
-  xlab("") +
+  geom_point(aes(x = (sort(wa.input$biomass, decreasing=TRUE)), y = (1:length(wa.input$biomass))), 
+             color = "#56B4E9", size = 2, alpha = 0.3) +
+  xlab(expression(paste("Body sizes, ", italic("x"), " (kg)"))) +
   ylab(expression(paste("Number of body sizes", " ">=" ", italic("x")))) +
   xlim((c(wa.input$min.biomass, wa.input$max.biomass))) +
   ylim((c(1, length(wa.input$biomass)))) +
-  scale_y_continuous(trans = 'log10') +
+  scale_y_continuous(trans = 'log10', breaks = c(1,10,100,1000,10000)) +
   scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10)) +
-  geom_line(aes(x = x.PLB, y = y.PLB), col = 'red', lwd = 1) +
-  annotate("text", x=0.069, y=15, label="Wakatobi") +
-  annotate("text", x=0.07, y=5, label = expression(paste(italic("b = "), -1.71))) +
+  geom_line(aes(x = wax.PLB, y = way.PLB), col = 'black', lwd = 1) +
+  annotate("text", x=0.069, y=5.5, label="Wakatobi") +
+  annotate("text", x=0.07, y=1.5, label = expression(paste(italic("b = "), -1.71))) +
   theme_classic()
 
 # Values of b to test to obtain confidence interval. For the real movement data
@@ -184,22 +186,23 @@ PLB.minLL.lo.b <- PLB.return.lo[[2]]
 # plot and find 95% confidence intervals for MLE method.
 PLB.minNegLL.lo.b <- PLB.minLL.lo.b$minimum
 x <- lo.input$biomass
-x.PLB = seq(min(lo.input$biomass), max(lo.input$biomass), length=1000) # x values to plot PLB. Note
+lox.PLB = seq(min(lo.input$biomass), max(lo.input$biomass), length=1000) # x values to plot PLB. Note
                                                                          # that these encompass the data, and are not based
                                                                          # on the binning (in MEE Figure 6 the line starts as
                                                                          # min(x), not the first bin.
-y.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.lo.b, xmin = min(x.PLB),
+loy.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.lo.b, xmin = min(x.PLB),
     xmax = max(x.PLB))) * length(lo.input$biomass)
 spectra.text <- as.character(round(PLB.bMLE.lo.b, 2))
 lob_plot <- ggplot() +
-  geom_point(aes(x = (sort(lo.input$biomass, decreasing=TRUE)), y = (1:length(lo.input$biomass))), size = 2, alpha = 0.2) +
-  xlab("") +
+  geom_point(aes(x = (sort(lo.input$biomass, decreasing=TRUE)), y = (1:length(lo.input$biomass))), 
+             color = "#009E73", size = 2, alpha = 0.3) +
+  xlab(expression(paste("Body sizes, ", italic("x"), " (kg)"))) +
   ylab(expression(paste("Number of body sizes", " ">=" ", italic("x")))) +
   xlim((c(lo.input$min.biomass, lo.input$max.biomass))) +
   ylim((c(1, length(lo.input$biomass)))) +
-  scale_y_continuous(trans = 'log10') +
+  scale_y_continuous(trans = 'log10', breaks = c(1,10,100,1000,10000)) +
   scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10)) +
-  geom_line(aes(x = x.PLB, y = y.PLB), col = 'red', lwd = 1) +
+  geom_line(aes(x = lox.PLB, y = loy.PLB), col = 'black', lwd = 1) +
   annotate("text", x=0.069, y=15, label="Lombok") +
   annotate("text", x=0.07, y=5, label = expression(paste(italic("b = "), -2.06))) +
   theme_classic()
@@ -222,13 +225,15 @@ slopes_ci_df <- data.frame(region = c("Raja Ampat", "Wakatobi", "Lombok"),
                            b = c(PLB.bMLE.ra.b, PLB.bMLE.wa.b, PLB.bMLE.lo.b),
                            b_lo = c(rabIn95[1], wabIn95[1],lobIn95[1]),
                            b_up = c(rabIn95[2], wabIn95[2],lobIn95[2]))
-
-ggplot() +
+slopes_ci_df$region <- as.factor(slopes_ci_df$region)
+slopes_ci_df$region <- factor(slopes_ci_df$region, levels = c("Raja Ampat", "Wakatobi", "Lombok"))
+slopes_ci <- ggplot() +
   geom_point(data = slopes_ci_df, aes(x = c(1,1,1), y = b, color = region)) +
   geom_errorbar(data = slopes_ci_df, aes(x = c(1,1,1), ymin = b_lo, ymax = b_up, color = region), width = 0.05) +
   ylab(expression(italic("b"))) +
   xlab("") +
   scale_x_continuous(limits = c(0.9,1.5)) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73")) +
   theme_bw() +
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank(),
@@ -238,7 +243,10 @@ ggplot() +
         panel.background = element_blank(),
         panel.border = element_blank(),
         axis.line.y = element_line(color = "black"),
-        legend.position = c(0.4,0.5))
+        legend.position = c(0.5,0.5))
+
+# cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+ggarrange(rab_plot, wab_plot, lob_plot, slopes_ci, ncol=2, nrow=2)
 
 # calculate size spectra slope for each study site =====================================================
 site.names <- as.character(unique(fish.df$site_name)) # save site names as a vector
