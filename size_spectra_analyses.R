@@ -314,17 +314,28 @@ panel.cor <- function(x, y, ...)
   txt <- as.character(format(cor(x, y), digits=2))
   text(0.5, 0.5, txt, cex = 6* abs(cor(x, y)))
 }
-pairs(covariates.df[,c(14,9,10,11)], 
+
+# calculate the mean kg/ha for each site
+tmp <- fish.df %>%
+  dplyr::group_by(site_name, transect, observer) %>%
+  dplyr::summarize(biomass_250m_sq = sum(biomass_kg)) %>%
+  dplyr::group_by(site_name) %>%
+  dplyr::summarize(mean_bio_density = mean(biomass_250m_sq)) %>%
+  mutate(mean_bio_hectare = mean_bio_density * 40) %>%
+  dplyr::select(site_name, mean_bio_hectare)
+
+covariates.df <- covariates.df %>%
+    left_join(., tmp, by = "site_name")
+
+pairs(covariates.df[,c(12,7,8,9)], 
       labels = c("Biomass", "Hard coral cover", "Algal cover", "Structural complexity"),
       lower.panel = panel.cor,
       upper.panel = panel.smooth,
       pch = 19)
-cor(covariates.df$mean_bio_hectare, covariates.df$hard_coral, method = "pearson")
-cor(covariates.df$mean_bio_hectare, covariates.df$algae, method = "pearson")
-cor(covariates.df$mean_bio_hectare, covariates.df$mean_complexity, method = "pearson")
 
 covariates.df$region <- as.factor(covariates.df$region)
 
+# Model 1 ==============================================================================================
 # Model with all covariates and region as a fixed effect
 gam1 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3) + s(algae, k=3) + s(mean_complexity, k=3) + region,
           data = covariates.df, family = Gamma(link=log), na.action = "na.fail", weights = covariates.df$b.weight)
