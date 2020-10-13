@@ -243,6 +243,7 @@ slopes_ci <- ggplot() +
         panel.background = element_blank(),
         panel.border = element_blank(),
         axis.line.y = element_line(color = "black"),
+        axis.title.y = element_text(angle = 0, vjust = 0.5, size = 14),
         legend.position = c(0.5,0.5))
 
 # cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
