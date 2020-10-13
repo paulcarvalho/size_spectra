@@ -72,7 +72,6 @@ carn.df <- carn.df %>% filter(observer != "ch")
 herb.df <- herb.df %>% filter(observer != "ch")
 
 # Set MLE parameters ===================================================================================
-
 # raja ampat (ra) biomass
 ra.input <- set.params(ra$biomass_kg)
 # wakatobi (wa) biomass
@@ -80,40 +79,13 @@ wa.input <- set.params(wa$biomass_kg)
 # lombok (lo) biomass
 lo.input <- set.params(lo$biomass_kg)
 
-mgpVals <- c(1.6,0.5,0) # mgp values   2.0, 0.5, 0
+mgpVals <- c(1.6,0.5,0) # mgp values 2.0, 0.5, 0
 xLim <- 10^par("usr")[1:2]
 yLim <- 10^par("usr")[3:4]
 
-# Plot size (kg) frequency =============================================================================
 
-# biomass
-fish.df %>%
-  ggplot() +
-  geom_histogram(aes(x=biomass_kg))
-
-# log-log transformed
-fish_df <- fish.df
-log_kg_freq <- fish_df %>%
-  # filter(region == "raja_ampat") %>% # use this filter to plot each region separately
-  mutate(kg_char = as.factor(as.character(round(biomass_kg, digits=2)))) %>%
-  group_by(kg_char) %>%
-  dplyr::summarize(abundance = sum(abundance)) %>%
-  ungroup() %>%
-  mutate(biomass_kg = as.numeric(kg_char)) %>%
-  mutate(log_kg = log(biomass_kg)) %>%
-  mutate(log_abundance = log(abundance)) %>%
-  filter(kg_char != 0)
-  
-lm <- lm(log_kg_freq$log_abundance ~ log_kg_freq$log_kg)
-summary(lm)
-plot(lm)
-
-ggplot() +
-  geom_point(data = log_kg_freq, aes(x=log_kg, y=log_abundance)) +
-  geom_smooth(data = log_kg_freq, aes(x=log_kg, y=log_abundance), color="black", method = "lm")
 
 # MLE Raja Ampat biomass ===============================================================================
-
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
 # as a starting point for nlm for MLE of b for PLB model.
 PLB.return.ra <- mle_b(region="raja_ampat", x=ra.input$biomass, log_x=ra.input$log.biomass, sum_log_x=ra.input$sum.log.biomass,
