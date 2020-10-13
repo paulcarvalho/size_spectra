@@ -83,8 +83,6 @@ mgpVals <- c(1.6,0.5,0) # mgp values 2.0, 0.5, 0
 xLim <- 10^par("usr")[1:2]
 yLim <- 10^par("usr")[3:4]
 
-
-
 # MLE Raja Ampat biomass ===============================================================================
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
 # as a starting point for nlm for MLE of b for PLB model.
@@ -96,41 +94,38 @@ PLB.minLL.ra.b <- PLB.return.ra[[2]]
 # plot and find 95% confidence intervals for MLE method.
 PLB.minNegLL.ra.b <- PLB.minLL.ra.b$minimum
 x <- ra.input$biomass
-plot(sort(ra.input$biomass, decreasing=TRUE), 1:length(ra.input$biomass), log="xy",
-  # xlab=expression(paste("Body sizes, ", italic(x), " (kg)")),
-  xlab="",
-  ylab = expression(paste("Number of body sizes", " ">=" ", italic("x"))), mgp=mgpVals,
-  xlim = c(ra.input$min.biomass, ra.input$max.biomass), ylim = c(1, length(ra.input$biomass)), axes=FALSE)
-  logTicks(xLim, yLim, xLabelBig = c(0, 1, 5, 10))   # Tick marks.
-  x.PLB = seq(min(ra.input$biomass), max(ra.input$biomass), length=1000) # x values to plot PLB. Note
+x.PLB = seq(min(ra.input$biomass), max(ra.input$biomass), length=1000) # x values to plot PLB. Note
                                                                          # that these encompass the data, and are not based
                                                                          # on the binning (in MEE Figure 6 the line starts as
                                                                          # min(x), not the first bin.
-  y.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.ra.b, xmin = min(x.PLB),
+y.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.ra.b, xmin = min(x.PLB),
     xmax = max(x.PLB))) * length(ra.input$biomass)
-  lines(x.PLB, y.PLB, col="red", lwd=2)
-  text(x=0.0755, y=15, labels="Raja Ampat", cex=1.1, pos=1, col="black")
-  spectra.text <- as.character(round(PLB.bMLE.ra.b, 2))
-  text(x=0.07, y=5, labels = bquote(paste(italic("b = "), .(spectra.text))), 
-    cex=1.1, pos=1, col="black")
-  mtext("a", side = 3, cex = 1.4, adj = -0.15)
-  # Values of b to test to obtain confidence interval. For the real movement data
-  # sets in Table 2 of Edwards (2011) the intervals were symmetric, so make a
-  # symmetric interval here.
-  bvec = seq(PLB.bMLE.ra.b - 0.5, PLB.bMLE.ra.b + 0.5, 0.00001) 
-  PLB.LLvals = vector(length=length(bvec))  # negative log-likelihood for bvec
-  for(i in 1:length(bvec)){
-    PLB.LLvals[i] = negLL.PLB(bvec[i], x=ra.input$biomass, n=length(ra.input$biomass), xmin=ra.input$min.biomass,
-        xmax=ra.input$max.biomass, sumlogx=ra.input$sum.log.biomass)   
-  }
-  critVal = PLB.minNegLL.ra.b  + qchisq(0.95,1)/2 # 1 degree of freedom, Hilborn and Mangel (1997) p162.
-  bIn95 = bvec[ PLB.LLvals < critVal ]
-  # To add just the curves at the limits of the 95% confidence interval of b:
-  for(i in c(1, length(bIn95))){
-    lines(x.PLB, (1 - pPLB(x = x.PLB, b = bIn95[i], xmin = min(x.PLB),
-      xmax = max(x.PLB))) * length(ra.input$biomass), col="red", lty=2)
-  }
-  # title(main="Raja Ampat")
+spectra.text <- as.character(round(PLB.bMLE.ra.b, 2))
+ggplot() +
+  geom_point(aes(x = (sort(ra.input$biomass, decreasing=TRUE)), y = (1:length(ra.input$biomass))), alpha = 0.2) +
+  xlab("") +
+  ylab(expression(paste("Number of body sizes", " ">=" ", italic("x")))) +
+  xlim((c(ra.input$min.biomass, ra.input$max.biomass))) +
+  ylim((c(1, length(ra.input$biomass)))) +
+  scale_y_continuous(trans = 'log10') +
+  scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10)) +
+  geom_line(aes(x = x.PLB, y = y.PLB), col = 'red', lwd = 1) +
+  annotate("text", x=0.0722, y=15, label="Raja Ampat") +
+  annotate("text", x=0.07, y=5, label = expression(paste(italic("b = "), -1.58))) +
+  theme_classic()
+
+# Values of b to test to obtain confidence interval. For the real movement data
+# sets in Table 2 of Edwards (2011) the intervals were symmetric, so make a
+# symmetric interval here.
+bvec = seq(PLB.bMLE.ra.b - 0.5, PLB.bMLE.ra.b + 0.5, 0.00001) 
+PLB.LLvals = vector(length=length(bvec))  # negative log-likelihood for bvec
+for(i in 1:length(bvec)){
+  PLB.LLvals[i] = negLL.PLB(bvec[i], x=ra.input$biomass, n=length(ra.input$biomass), xmin=ra.input$min.biomass,
+  xmax=ra.input$max.biomass, sumlogx=ra.input$sum.log.biomass)   
+}
+critVal = PLB.minNegLL.ra.b  + qchisq(0.95,1)/2 # 1 degree of freedom, Hilborn and Mangel (1997) p162.
+bIn95 = bvec[ PLB.LLvals < critVal ]
+rabIn95 <- c(min(bIn95), max(bIn95))
 
 # MLE Wakatobi biomass ===============================================================================
 
@@ -173,6 +168,7 @@ plot(sort(wa.input$biomass, decreasing=TRUE), 1:length(wa.input$biomass), log="x
   }
   critVal = PLB.minNegLL.wa.b  + qchisq(0.95,1)/2 # 1 degree of freedom, Hilborn and Mangel (1997) p162.
   bIn95 = bvec[ PLB.LLvals < critVal ]
+  wabIn95 <- c(min(bIn95), max(bIn95))
   # To add just the curves at the limits of the 95% confidence interval of b:
   for(i in c(1, length(bIn95))){
     lines(x.PLB, (1 - pPLB(x = x.PLB, b = bIn95[i], xmin = min(x.PLB),
@@ -221,6 +217,7 @@ plot(sort(lo.input$biomass, decreasing=TRUE), 1:length(lo.input$biomass), log="x
   }
   critVal = PLB.minNegLL.lo.b  + qchisq(0.95,1)/2 # 1 degree of freedom, Hilborn and Mangel (1997) p162.
   bIn95 = bvec[ PLB.LLvals < critVal ]
+  lobIn95 <- c(min(bIn95), max(bIn95))
   # To add just the curves at the limits of the 95% confidence interval of b:
   for(i in c(1, length(bIn95))){
     lines(x.PLB, (1 - pPLB(x = x.PLB, b = bIn95[i], xmin = min(x.PLB),
