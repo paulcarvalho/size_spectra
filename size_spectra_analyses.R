@@ -273,18 +273,7 @@ for(i in 1:length(site.names)){
   covariates.df$b.weight[which(covariates.df$site_name == site.i)] <- inv.var
 }
  
-# test normality of slope estimates ====================================================================
-ggdensity(abs(covariates.df$b))
-ggqqplot(abs(covariates.df$b))
-shapiro.test(abs(covariates.df$b)) # data are not normally distributed
-
-plot(covariates.df$b)
-fit_g  <- fitdist(abs(covariates.df$b), "gamma")
-summary(fit_g)
-plot(fit_g)
-
 # slope (b) in relation to human population gravity ====================================================
-
 ggplot() +
   geom_point(data=covariates.df, aes(x=log(Grav_tot), y=b, color=region)) +
   geom_smooth(data=covariates.df, aes(x=log(Grav_tot), y=b), color="black", method="lm") +
