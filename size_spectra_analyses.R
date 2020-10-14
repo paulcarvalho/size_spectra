@@ -490,11 +490,7 @@ ggplot() +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
   xlab("Algal cover (%)")
 
-
-
-
 # Density of small, medium and large fishes at each site ==================================================
-
 fish.sizes.df <- fish.df %>%
   mutate(size_cat = ifelse(biomass_kg < 0.2, "small",
                     ifelse(biomass_kg >= 0.2 & biomass_kg < 1.2, "medium", "large"))) %>%
@@ -515,11 +511,13 @@ ggplot(data = fish.sizes.df, aes(x = size_cat, y = bio_ha, fill = region)) +
                 width = 0.2, position = position_dodge(0.9)) +
   theme_classic() +
   scale_y_continuous(expand = c(0,0)) +
-  theme(legend.title = element_blank()) +
-  scale_fill_discrete(labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   scale_x_discrete(labels = c("Large", "Medium", "Small")) +
-  labs(x = "Size category", y = "Biomass (kg/ha)")
-
+  scale_fill_manual(values = c("#E69F00", "#56B4E9", "#009E73"),
+                    labels = c("Raja Ampat", "Wakatobi", "Lombok"))+
+  labs(x = "Size category", y = "Biomass (kg/ha)") +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.85,0.8))
+  
 # Species abundance for carnivores and herbivores ======================================================
 species.carn <- fish.df %>%
   filter(tp == "Carnivore") %>%
