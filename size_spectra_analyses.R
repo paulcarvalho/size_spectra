@@ -98,8 +98,8 @@ rax.PLB = seq(min(ra.input$biomass), max(ra.input$biomass), length=1000) # x val
                                                                          # that these encompass the data, and are not based
                                                                          # on the binning (in MEE Figure 6 the line starts as
                                                                          # min(x), not the first bin.
-ray.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.ra.b, xmin = min(x.PLB),
-    xmax = max(x.PLB))) * length(ra.input$biomass)
+ray.PLB = (1 - pPLB(x = rax.PLB, b = PLB.bMLE.ra.b, xmin = min(rax.PLB),
+    xmax = max(rax.PLB))) * length(ra.input$biomass)
 spectra.text <- as.character(round(PLB.bMLE.ra.b, 2))
 rab_plot <- ggplot() +
   geom_point(aes(x = (sort(ra.input$biomass, decreasing=TRUE)), y = (1:length(ra.input$biomass))),
@@ -144,8 +144,8 @@ wax.PLB = seq(min(wa.input$biomass), max(wa.input$biomass), length=1000) # x val
                                                                          # that these encompass the data, and are not based
                                                                          # on the binning (in MEE Figure 6 the line starts as
                                                                          # min(x), not the first bin.
-way.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.wa.b, xmin = min(x.PLB),
-    xmax = max(x.PLB))) * length(wa.input$biomass)
+way.PLB = (1 - pPLB(x = wax.PLB, b = PLB.bMLE.wa.b, xmin = min(wax.PLB),
+    xmax = max(wax.PLB))) * length(wa.input$biomass)
 spectra.text <- as.character(round(PLB.bMLE.wa.b, 2))
 wab_plot <- ggplot() +
   geom_point(aes(x = (sort(wa.input$biomass, decreasing=TRUE)), y = (1:length(wa.input$biomass))), 
@@ -190,8 +190,8 @@ lox.PLB = seq(min(lo.input$biomass), max(lo.input$biomass), length=1000) # x val
                                                                          # that these encompass the data, and are not based
                                                                          # on the binning (in MEE Figure 6 the line starts as
                                                                          # min(x), not the first bin.
-loy.PLB = (1 - pPLB(x = x.PLB, b = PLB.bMLE.lo.b, xmin = min(x.PLB),
-    xmax = max(x.PLB))) * length(lo.input$biomass)
+loy.PLB = (1 - pPLB(x = lox.PLB, b = PLB.bMLE.lo.b, xmin = min(lox.PLB),
+    xmax = max(lox.PLB))) * length(lo.input$biomass)
 spectra.text <- as.character(round(PLB.bMLE.lo.b, 2))
 lob_plot <- ggplot() +
   geom_point(aes(x = (sort(lo.input$biomass, decreasing=TRUE)), y = (1:length(lo.input$biomass))), 
@@ -359,8 +359,7 @@ gam3 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(algae, k=3) + s(mean_complexit
 summary(gam3)
 concurvity(gam3, full = FALSE)
 
-
-
+# Plot sum of AICc weights from GAMs ===================================================================
 # Plot sum of AICc weights
 dd.gam2 <- dredge(gam2)
 dd.gam2.df <- data.frame(Biomass = dd.gam2$`s(mean_bio_hectare, k = 3)`,
@@ -372,7 +371,7 @@ dd.gam2.df <- dd.gam2.df %>%
   na.omit() %>%
   dplyr::group_by(covariate) %>%
   dplyr::summarize(sum_weight = sum(weight)) %>%
-  mutate(model = "Hard coral cover")
+  mutate(model = "GAMs with hard coral cover")
 
 dd.gam3 <- dredge(gam3)
 dd.gam3.df <- data.frame(Biomass = dd.gam3$`s(mean_bio_hectare, k = 3)`,
@@ -384,13 +383,13 @@ dd.gam3.df <- dd.gam3.df %>%
   na.omit() %>%
   dplyr::group_by(covariate) %>%
   dplyr::summarize(sum_weight = sum(weight)) %>%
-  mutate(model = "Structural complexity")
+  mutate(model = "GAMs with structural complexity")
 
 dd.gam.df <- rbind(dd.gam2.df, dd.gam3.df)
 dd.gam.df$covariate <- c("Algal cover", "Biomass", "Hard coral cover", "Algal cover", "Biomass", "Structural complexity")
 
 # Plot
-plot_base <- ggplot(data=dd.gam.df, aes(x = covariate, y = sum_weight, fill = model)) +
+aicc_sums_plot <- ggplot(data=dd.gam.df, aes(x = covariate, y = sum_weight, fill = model)) +
   theme_bw() +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
@@ -398,7 +397,7 @@ plot_base <- ggplot(data=dd.gam.df, aes(x = covariate, y = sum_weight, fill = mo
         axis.line = element_line()) +
   geom_bar(stat = "identity", position = "dodge") +
   geom_hline(yintercept = 0.5, lty = "dashed") +
-  scale_fill_manual(values = c("#F1CE75", "#B2D1E8")) +
+  scale_fill_manual(values = c("light grey", "dark grey")) +
   scale_y_continuous(expand = c(0,0)) +
   coord_flip() +
   facet_grid(rows = vars(model), scales = "free_y", space = "free_y", switch = "y") + #
@@ -407,6 +406,8 @@ plot_base <- ggplot(data=dd.gam.df, aes(x = covariate, y = sum_weight, fill = mo
   guides(fill = FALSE) +
   xlab("") +
   ylab("Sum of AICc weights")
+
+
   
 # Plot model averages
 gam2.modavg <- model.avg(dd.gam2)
