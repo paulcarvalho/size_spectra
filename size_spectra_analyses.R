@@ -15,6 +15,12 @@ setwd("C:/Users/pgcar/Google Drive/Paul Carvalho/dissertation/chapter 2/analysis
 source("functions.r")
 
 # Libraries
+devtools::install_github("andrew-edwards/sizeSpectra")
+devtools::install_github("vqv/ggbiplot")
+devtools::install_github("m-clark/visibly")
+library(sizeSpectra)
+library(ggbiplot)
+library(visibly)
 library(plotrix)
 library(ggplot2)
 library(splitstackshape)
@@ -27,10 +33,6 @@ library(readxl)
 library(varhandle)
 library(visreg)
 library(devtools)
-devtools::install_github("andrew-edwards/sizeSpectra")
-devtools::install_github("vqv/ggbiplot")
-library(ggbiplot)
-library(sizeSpectra)
 library(ggpubr)
 library(rstatix)
 library(fitdistrplus)
@@ -397,7 +399,7 @@ aicc_sums_plot <- ggplot(data=dd.gam.df, aes(x = covariate, y = sum_weight, fill
         axis.line = element_line()) +
   geom_bar(stat = "identity", position = "dodge") +
   geom_hline(yintercept = 0.5, lty = "dashed") +
-  scale_fill_manual(values = c("light grey", "dark grey")) +
+  scale_fill_manual(values = c("grey80", "grey40")) +
   scale_y_continuous(expand = c(0,0)) +
   coord_flip() +
   facet_grid(rows = vars(model), scales = "free_y", space = "free_y", switch = "y") + #
@@ -407,8 +409,92 @@ aicc_sums_plot <- ggplot(data=dd.gam.df, aes(x = covariate, y = sum_weight, fill
   xlab("") +
   ylab("Sum of AICc weights")
 
+# Plot partial effects =================================================================================
 
+covariates.df$region <- factor(covariates.df$region, levels = c("raja_ampat", "wakatobi", "lombok"))
+
+# GAM 2 partial effects
+parEff_gam2 <- plot_gam(gam2)
+parEff_gam2_bio <- parEff_gam2[1]$data %>% filter(term == "mean_bio_hectare")
+ggplot() +
+  geom_line(data = parEff_gam2_bio, aes(x = value, y=-fit), size = 1) +
+  geom_ribbon(data = parEff_gam2_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_point(data = covariates.df, aes(x = mean_bio_hectare, y = b, color = region)) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
+  theme_classic() +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.85, 0.25)) +
+  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  xlab("Biomass (kg/ha)")
+
+parEff_gam2_hardcoral <- parEff_gam2[1]$data %>% filter(term == "hard_coral")
+ggplot() +
+  geom_line(data = parEff_gam2_hardcoral, aes(x = value, y=-fit), size = 1) +
+  geom_ribbon(data = parEff_gam2_hardcoral, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_point(data = covariates.df, aes(x = hard_coral, y = b, color = region)) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
+  theme_classic() +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.85, 0.25)) +
+  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  xlab("Hard coral cover (%)")
   
+parEff_gam2_algae <- parEff_gam2[1]$data %>% filter(term == "algae")
+ggplot() +
+  geom_line(data = parEff_gam2_algae, aes(x = value, y=-fit), size = 1) +
+  geom_ribbon(data = parEff_gam2_algae, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_point(data = covariates.df, aes(x = algae, y = b, color = region)) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
+  theme_classic() +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.85, 0.25)) +
+  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  xlab("Algal cover (%)")
+
+
+# GAM 3 partial effects
+parEff_gam3 <- plot_gam(gam3)
+parEff_gam3_bio <- parEff_gam3[1]$data %>% filter(term == "mean_bio_hectare")
+ggplot() +
+  geom_line(data = parEff_gam3_bio, aes(x = value, y=-fit), size = 1) +
+  geom_ribbon(data = parEff_gam3_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_point(data = covariates.df, aes(x = mean_bio_hectare, y = b, color = region)) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
+  theme_classic() +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.85, 0.25)) +
+  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  xlab("Biomass (kg/ha)")
+
+parEff_gam3_comp <- parEff_gam3[1]$data %>% filter(term == "mean_complexity")
+ggplot() +
+  geom_line(data = parEff_gam3_comp, aes(x = value, y=-fit), size = 1) +
+  geom_ribbon(data = parEff_gam3_comp, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_point(data = covariates.df, aes(x = mean_complexity, y = b, color = region)) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
+  theme_classic() +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.85, 0.25)) +
+  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  xlab("Structural complexity")
+
+parEff_gam3_algae <- parEff_gam3[1]$data %>% filter(term == "algae")
+ggplot() +
+  geom_line(data = parEff_gam3_algae, aes(x = value, y=-fit), size = 1) +
+  geom_ribbon(data = parEff_gam3_algae, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_point(data = covariates.df, aes(x = algae, y = b, color = region)) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
+  theme_classic() +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.85, 0.25)) +
+  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  xlab("Algal cover (%)")
+
+
+
+
+
+
 # Plot model averages
 gam2.modavg <- model.avg(dd.gam2)
 gam2.modavg.coef <- coef(gam2.modavg)
