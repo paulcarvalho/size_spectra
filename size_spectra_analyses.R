@@ -336,30 +336,29 @@ pairs(covariates.df[,c(12,7,8,9)],
 covariates.df$region <- as.factor(covariates.df$region)
 
 # Model 1 ==============================================================================================
-# Model with all covariates and region as a fixed effect
+# Model with all predictor variables and region as a fixed effect
 gam1 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3) + s(algae, k=3) + s(mean_complexity, k=3) + region,
           data = covariates.df, family = Gamma(link=log), na.action = "na.fail", weights = covariates.df$b.weight)
-plot(gam1)
+plot(gam1, page = 1)
 summary(gam1)
-gam.check(gam1)
-# Test for concurvity
+# Concurvity
 concurvity(gam1, full = TRUE)
 concurvity(gam1, full = FALSE)
-dd <- dredge(gam1, rank = "AICc")
 
-# Remove structural complexity
+# Model 2 ==============================================================================================
+# Remove structural complexity due to covariance with hard coral cover (concurvity > 0.3)
 gam2 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3) + s(algae, k=3) + region,
           data = covariates.df, family = Gamma(link=log), na.action = "na.fail", weights = covariates.df$b.weight)
 summary(gam2)
 concurvity(gam2, full = FALSE)
-dredge(gam2, rank = "AICc")
 
-# Remove hard coral
+# Model 3 ==============================================================================================
+# Remove hard coral due to covariance with structural complexity (concurvity > 0.3)
 gam3 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(algae, k=3) + s(mean_complexity, k=3) + region,
           data = covariates.df, family = Gamma(link=log), na.action = "na.fail", weights = covariates.df$b.weight)
 summary(gam3)
 concurvity(gam3, full = FALSE)
-dredge(gam3, rank = "AICc")
+
 
 
 # Plot sum of AICc weights
