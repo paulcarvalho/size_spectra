@@ -607,8 +607,8 @@ ggplot(data = fish.sizes.df, aes(x = size_cat, y = bio_ha, fill = region)) +
 # Species abundance for carnivores and herbivores ======================================================
 species.carn <- fish.df %>%
   filter(tp == "Carnivore") %>%
-  group_by(genus_species) %>%
-  summarise(total = sum(abundance)) %>%
+  dplyr::group_by(genus_species) %>%
+  dplyr::summarise(total = sum(abundance)) %>%
   filter(total >= 10)
 
 ggplot() +
@@ -617,21 +617,18 @@ ggplot() +
 
 species.herb <- fish.df %>%
   filter(tp == "Herbivore") %>%
-  group_by(genus_species) %>%
-  summarise(total = sum(abundance)) %>%
+  dplyr::group_by(genus_species) %>%
+  dplyr::summarise(total = sum(abundance)) %>%
   filter(total >= 10)
 
 ggplot() +
   geom_bar(data = species.herb, aes(x = reorder(genus_species, total), y = total), stat = "identity") +
   coord_flip()
 
-# MLE Carnivore biomass ================================================================================
+# MLE Carnivore and Herbivore ==========================================================================
 
-# Carnivore biomass
+# CARNIVORE MLE
 carn.input <- set.params(carn.df$biomass_kg)
-# Herbivore biomass
-herb.input <- set.params(herb.df$biomass_kg)
-
 # MLE CARNIVORE
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
 # as a starting point for nlm for MLE of b for PLB model.
@@ -639,12 +636,32 @@ PLB.return.carn <- mle_b(region=NA, x=carn.input$biomass, log_x=carn.input$log.b
                  x_min=carn.input$min.biomass, x_max=carn.input$max.biomass)
 PLB.bMLE.carn.b <- PLB.return.carn[[1]] 
 PLB.minLL.carn.b <- PLB.return.carn[[2]]
+# plot and find 95% confidence intervals for MLE method.
+PLB.minNegLL.carn.b <- PLB.minLL.carn.b$minimum
+x <- carn.input$biomass
+carnx.PLB = seq(min(carn.input$biomass), max(carn.input$biomass), length=1000) # x values to plot PLB. Note
+                                                                         # that these encompass the data, and are not based
+                                                                         # on the binning (in MEE Figure 6 the line starts as
+                                                                         # min(x), not the first bin.
+carny.PLB = (1 - pPLB(x = carnx.PLB, b = PLB.bMLE.carn.b, xmin = min(carnx.PLB),
+    xmax = max(carnx.PLB))) * length(carn.input$biomass)
+spectra.text <- as.character(round(PLB.bMLE.carn.b, 2))
+# Values of b to test to obtain confidence interval. For the real movement data
+# sets in Table 2 of Edwards (2011) the intervals were symmetric, so make a
+# symmetric interval here.
+bvec = seq(PLB.bMLE.carn.b - 0.5, PLB.bMLE.carn.b + 0.5, 0.00001) 
+PLB.LLvals = vector(length=length(bvec))  # negative log-likelihood for bvec
+for(i in 1:length(bvec)){
+  PLB.LLvals[i] = negLL.PLB(bvec[i], x=carn.input$biomass, n=length(carn.input$biomass), xmin=carn.input$min.biomass,
+  xmax=carn.input$max.biomass, sumlogx=carn.input$sum.log.biomass)   
+}
+critVal = PLB.minNegLL.carn.b  + qchisq(0.95,1)/2 # 1 degree of freedom, Hilborn and Mangel (1997) p162.
+bIn95 = bvec[ PLB.LLvals < critVal ]
+carnbIn95 <- c(min(bIn95), max(bIn95))
 
-trophic.plots(PLB.return.carn, PLB.bMLE.carn.b, PLB.minLL.carn.b, carn.input, mgpVals, troph_id = "Carnivores", panel = "a")
-# title(main = "Carnivore")
-
-test <- slope.conf.int(PLB.bMLE.carn.b, PLB.minLL.carn.b$minimum, carn.input)
-
+# HERBIVORE MLE
+# Herbivore biomass
+herb.input <- set.params(herb.df$biomass_kg)
 # MLE HERBIVORE
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
 # as a starting point for nlm for MLE of b for PLB model.
@@ -652,11 +669,77 @@ PLB.return.herb <- mle_b(region=NA, x=herb.input$biomass, log_x=herb.input$log.b
                  x_min=herb.input$min.biomass, x_max=herb.input$max.biomass)
 PLB.bMLE.herb.b <- PLB.return.herb[[1]] 
 PLB.minLL.herb.b <- PLB.return.herb[[2]]
+# plot and find 95% confidence intervals for MLE method.
+PLB.minNegLL.herb.b <- PLB.minLL.herb.b$minimum
+x <- herb.input$biomass
+herbx.PLB = seq(min(herb.input$biomass), max(herb.input$biomass), length=1000) # x values to plot PLB. Note
+                                                                         # that these encompass the data, and are not based
+                                                                         # on the binning (in MEE Figure 6 the line starts as
+                                                                         # min(x), not the first bin.
+herby.PLB = (1 - pPLB(x = herbx.PLB, b = PLB.bMLE.herb.b, xmin = min(herbx.PLB),
+    xmax = max(herbx.PLB))) * length(herb.input$biomass)
+spectra.text <- as.character(round(PLB.bMLE.herb.b, 2))
+# Values of b to test to obtain confidence interval. For the real movement data
+# sets in Table 2 of Edwards (2011) the intervals were symmetric, so make a
+# symmetric interval here.
+bvec = seq(PLB.bMLE.herb.b - 0.5, PLB.bMLE.herb.b + 0.5, 0.00001) 
+PLB.LLvals = vector(length=length(bvec))  # negative log-likelihood for bvec
+for(i in 1:length(bvec)){
+  PLB.LLvals[i] = negLL.PLB(bvec[i], x=herb.input$biomass, n=length(herb.input$biomass), xmin=herb.input$min.biomass,
+  xmax=herb.input$max.biomass, sumlogx=herb.input$sum.log.biomass)   
+}
+critVal = PLB.minNegLL.herb.b  + qchisq(0.95,1)/2 # 1 degree of freedom, Hilborn and Mangel (1997) p162.
+bIn95 = bvec[ PLB.LLvals < critVal ]
+herbbIn95 <- c(min(bIn95), max(bIn95))
 
-trophic.plots(PLB.return.herb, PLB.bMLE.herb.b, PLB.minLL.herb.b, herb.input, mgpVals, troph_id = "Herbivores", panel = "b")
-# title(main="Herbivore")
+# Plot Carn and Herb rank frequency plots
+trophb_plot <- ggplot() +
+  geom_point(aes(x = (sort(carn.input$biomass, decreasing=TRUE)), y = (1:length(carn.input$biomass))), 
+             color = "#D55E00", size = 2, alpha = 0.25) +
+  geom_point(aes(x = (sort(herb.input$biomass, decreasing=TRUE)), y = (1:length(herb.input$biomass))), 
+             color = "#0072B2", size = 2, alpha = 0.25) +
+  xlab(expression(paste("Body sizes, ", italic("x"), " (kg)"))) +
+  ylab(expression(paste("Number of body sizes", " ">=" ", italic("x")))) +
+  xlim((c(carn.input$min.biomass, carn.input$max.biomass))) +
+  ylim((c(1, length(carn.input$biomass)))) +
+  scale_y_continuous(trans = 'log10', breaks = c(1,10,100,1000,10000)) +
+  scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10)) +
+  geom_line(aes(x = carnx.PLB, y = carny.PLB), col = "#D55E00", lwd = 1) +
+  geom_line(aes(x = herbx.PLB, y = herby.PLB), col = "#0072B2", lwd = 1) +
+  annotate("text", x=0.1, y=1, label = expression(italic("b")[Carnivore]*" = "* -1.97), color = "#D55E00") +
+  annotate("text", x=0.1, y=0.5, label = expression(italic("b")[Herbivore]*" = "* -1.54), color = "#0072B2") +
+  theme_classic()
+trophb_plot
 
-test <- slope.conf.int(PLB.bMLE.herb.b, PLB.minLL.herb.b$minimum, herb.input)
+# Plot estimated size spectra slopes with confidence intervals (Carn/Herb) =============================
+slopesTroph_ci_df <- data.frame(tp = c("Carnivore", "Herbivore"),
+                           b = c(PLB.bMLE.carn.b, PLB.bMLE.herb.b),
+                           b_lo = c(carnbIn95[1], herbbIn95[1]),
+                           b_up = c(carnbIn95[2], herbbIn95[2]))
+slopesTroph_ci_df$tp <- as.factor(slopesTroph_ci_df$tp)
+slopesTroph_ci_df$tp <- factor(slopesTroph_ci_df$tp, levels = c("Carnivore", "Herbivore"))
+slopesTroph_ci <- ggplot() +
+  geom_point(data = slopesTroph_ci_df, aes(x = c(1,1), y = b, color = tp)) +
+  geom_errorbar(data = slopesTroph_ci_df, aes(x = c(1,1), ymin = b_lo, ymax = b_up, color = tp), width = 0.05) +
+  ylab(expression(italic("b"))) +
+  xlab("") +
+  scale_x_continuous(limits = c(0.9,1.5)) +
+  scale_color_manual(values = c("#D55E00", "#0072B2")) +
+  theme_bw() +
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        legend.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        panel.border = element_blank(),
+        axis.line.y = element_line(color = "black"),
+        axis.title.y = element_text(angle = 0, vjust = 0.5, size = 14),
+        legend.position = c(0.5,0.5))
+
+# cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+ggarrange(trophb_plot, slopesTroph_ci, ncol=2, nrow=1)
+
 
 # Trophic position analysis for each region =========================================================
 
