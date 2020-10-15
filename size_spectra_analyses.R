@@ -864,7 +864,7 @@ for(i in 1:length(sites.trophic$site_name)){
   site.tp.df <- fish.df %>% filter(site_name == site.i) %>% filter(tp == tp.i)
   # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
   # as a starting point for nlm for MLE of b for PLB model.
-  tmp.input <- set.params(site.tp.df)
+  tmp.input <- set.params(site.tp.df$biomass_kg)
   PLB.return <- mle_b(region="na", x=tmp.input$biomass, log_x=tmp.input$log.biomass, sum_log_x=tmp.input$sum.log.biomass,
                 x_min=tmp.input$min.biomass, x_max=tmp.input$max.biomass)
   stderr <- sqrt(abs(diag(solve(PLB.return[[2]]$hessian))))
@@ -888,7 +888,7 @@ tmp <- fish.df %>%
 
 sites.trophic <- sites.trophic %>%
   left_join(., tmp, by = c("site_name" = "site_name", "tp" = "tp")) %>%
-  left_join(., gravity.df, by = "site_name") %>%
+  left_join(., covariates.df, by = "site_name") %>%
   dplyr::select(site_name, tp, b = b.x, b.weight = b.weight.x, mean_bio_hectare = mean_bio_hectare.x, region, Grav_tot, hard_coral, 
          algae, mean_complexity, total_bio = mean_bio_hectare.y)
 
@@ -897,44 +897,71 @@ ggplot() +
   theme_classic() +
   labs(x="Biomass density (kg/ha)", y="Size spectra slope (b)") +
   scale_shape_discrete(name = NULL, labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
-  scale_color_discrete(name = NULL) 
+  scale_color_manual(name = NULL, values = c("#D55E00", "#0072B2")) +
   scale_x_continuous(limits = c(0,2500), expand = c(0,0))
 
-# Abundance of small, medium and large herbs  and carns fishes at each site =================================
-
-herb.sizes.df <- fish.df %>%
-  filter(tp == "Herbivore") %>%
-  mutate(size_cat = ifelse(biomass_kg < 0.2, "small",
-                    ifelse(biomass_kg >= 0.2 & biomass_kg < 1.2, "medium", "large"))) %>%
-  group_by(size_cat) %>%
-  summarize(abundance = sum(abundance))
-  # arrange(biomass_kg)
-
-ggplot() +
-  geom_bar(data = herb.sizes.df, aes(x = size_cat, y = abundance), stat = "identity") +
-  # scale_y_continuous(lim = c(0, 1100)) +
-  labs(x = "Body size (kg)", y = "Abundance", title = "Herbivores")
-
-
+# Density of small, medium and large herbs and carns fishes at each site =================================
 
 carn.sizes.df <- fish.df %>%
   filter(tp == "Carnivore") %>%
   mutate(size_cat = ifelse(biomass_kg < 0.2, "small",
                     ifelse(biomass_kg >= 0.2 & biomass_kg < 1.2, "medium", "large"))) %>%
-  group_by(size_cat) %>%
-  summarize(abundance = sum(abundance))
-  # arrange(biomass_kg)
+  dplyr::group_by(region, site_name, transect, observer, size_cat) %>%
+  dplyr::summarise(abundance = sum(abundance)) %>%
+  dplyr::group_by(region, size_cat) %>%
+  dplyr::summarise(ab = mean(abundance, na.rm = TRUE),
+                   stderr = sd(abundance, na.rm = TRUE)) %>%
+  mutate(ab_ha = ab * 40) %>%
+  mutate(stderr_ha = stderr * 40) %>%
+  mutate(region = as.factor(region)) %>%
+  mutate(region = fct_relevel(region, "raja_ampat", "wakatobi", "lombok"))
 
-ggplot() +
-  geom_bar(data = carn.sizes.df, aes(x = biomass_kg, y = abundance), stat = "identity") +
-  # scale_y_continuous(lim = c(0, 1100)) +
-  labs(x = "Body size (kg)", y = "Abundance", title = "Carnivores")
+ggplot(data = carn.sizes.df, aes(x = size_cat, y = ab_ha, fill = region)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = ab_ha - stderr_ha, ymax = ab_ha + stderr_ha), stat = "identity",
+                width = 0.2, position = position_dodge(0.9)) +
+  theme_classic() +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(labels = c("Large", "Medium", "Small")) +
+  scale_fill_manual(values = c("#E69F00", "#56B4E9", "#009E73"),
+                    labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
+  labs(title = "Carnivore", x = "Size category", y = "Biomass (kg/ha)") +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.85,0.85))
+  
+herb.sizes.df <- fish.df %>%
+  filter(tp == "Herbivore") %>%
+  mutate(size_cat = ifelse(biomass_kg < 0.2, "small",
+                    ifelse(biomass_kg >= 0.2 & biomass_kg < 1.2, "medium", "large"))) %>%
+  dplyr::group_by(region, site_name, transect, observer, size_cat) %>%
+  dplyr::summarize(biomass_kg = sum(biomass_kg)) %>%
+  dplyr::group_by(region, size_cat) %>%
+  dplyr::summarize(bio = mean(biomass_kg),
+                   stderr = std.error(biomass_kg)) %>%
+  mutate(bio_ha = bio * 40) %>%
+  mutate(stderr_ha = stderr * 40) %>%
+  mutate(region = as.factor(region)) %>%
+  mutate(region = fct_relevel(region, "raja_ampat", "wakatobi", "lombok"))
+
+ggplot(data = herb.sizes.df, aes(x = size_cat, y = bio_ha, fill = region)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = bio_ha - stderr_ha, ymax = bio_ha + stderr_ha), stat = "identity",
+                width = 0.2, position = position_dodge(0.9)) +
+  theme_classic() +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(labels = c("Large", "Medium", "Small")) +
+  scale_fill_manual(values = c("#E69F00", "#56B4E9", "#009E73"),
+                    labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
+  labs(title = "Herbivore", x = "Size category", y = "Biomass (kg/ha)") +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.85,0.85))
 
 
 # Trophic group GAMs ===================================================================================
 
 carn.gam.df <- sites.trophic %>% filter(tp == "Carnivore")
 herb.gam.df <- sites.trophic %>% filter(tp == "Herbivore")
+
 # merge to get the other functional groups biomass
 carn.gam.df <- carn.gam.df %>%
   left_join(., herb.gam.df, by = "site_name") %>%
@@ -950,238 +977,54 @@ herb.gam.df <- herb.gam.df %>%
          carn_bio = mean_bio_hectare.y, total_bio = total_bio.x) %>%
   mutate(carn.herb = carn_bio/mean_bio_hectare)
 
-# Carnivore global model
-carn.gam1 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3) + s(algae, k=3) + s(mean_complexity, k=3) +
-                   te(mean_bio_hectare, mean_complexity, k = 3) + te(hard_coral, mean_complexity, k = 3), 
+# Carvnivore GAM 1 =====================================================================================
+carn.gam1 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3) + s(algae, k=3) + s(mean_complexity, k=3) + region,
                  data = carn.gam.df, family = Gamma(link = log), na.action = "na.fail", weights = carn.gam.df$b.weight)
 summary(carn.gam1)
-plot(influence.gam(carn.gam1))
-carn.dd <- dredge(carn.gam1, rank = "AICc")
+plot(carn.gam1, pages = 1)
+concurvity(carn.gam1, full = TRUE)
 concurvity(carn.gam1, full = FALSE)
 
-carn.gam1.1 <- gam(abs(b) ~ s(mean_bio_hectare, k=3, fx=TRUE) + s(mean_complexity, k=3, fx=TRUE) + te(mean_bio_hectare, mean_complexity, k = 3), 
+# Carvnivore GAM 2 =====================================================================================
+# Remove structural complexity due to concurvity with hard coral > 0.3
+carn.gam2 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3) + s(algae, k=3) + region,
                  data = carn.gam.df, family = Gamma(link = log), na.action = "na.fail", weights = carn.gam.df$b.weight)
-hist(influence.gam(carn.gam1.1))
-summary(carn.gam1.1)
-gam.check(carn.gam1.1)
-
-carn.gam1.2 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(mean_complexity, k=3), 
-                 data = carn.gam.df, family = Gamma(link = log), na.action = "na.fail", weights = carn.gam.df$b.weight)
-summary(carn.gam1.2)
-
-
-# Carnivore best fit model according to AICc
-carn.gam2 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3), weights = carn.gam.df$b.weight,
-                 data = carn.gam.df, family = Gamma(link = log), na.action = "na.fail")
 summary(carn.gam2)
-gam.check(carn.gam2)
+plot(carn.gam2, pages = 1)
 concurvity(carn.gam2, full = FALSE)
 
-carn.gam3 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3) + te(mean_bio_hectare, hard_coral), 
+# Carvnivore GAM 3 =====================================================================================
+# Remove hard coral due to concurvity with strucural complexity > 0.3
+carn.gam3 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(mean_complexity, k=3) + s(algae, k=3) + region,
                  data = carn.gam.df, family = Gamma(link = log), na.action = "na.fail", weights = carn.gam.df$b.weight)
 summary(carn.gam3)
-AICc(carn.gam2, carn.gam3)
+plot(carn.gam3, pages = 1)
+concurvity(carn.gam3, full = FALSE)
 
-
-carn.gam.t1 <- gam(abs(b) ~ s(mean_complexity, k=3), data = carn.gam.df, Gamma(link = log), weights = carn.gam.df$b.weight)
-summary(carn.gam.t1)
-plot(carn.gam.t1)
-
-# test covariance between biomass, coral, and complexity
-carn.gamb1 <- gam(mean_bio_hectare ~ s(mean_complexity, k = 3), data = carn.gam.df, family = Gamma(link = log))
-summary(carn.gamb1)
-
-# Carn SI model
-carn.gam.t1 <- gam(mean_bio_hectare ~ s(hard_coral, k = 3), data = carn.gam.df, Gamma(link = log))
-summary(carn.gam.t1)
-gam.check(carn.gam.t1)
-plot(carn.gam.t1)
-
-# Herbivore global model
-herb.gam1 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3) + s(algae, k=3) + s(mean_complexity, k=3) + 
-                   te(hard_coral, mean_complexity, k = 3), 
+# Herbivore GAM 1 =====================================================================================
+herb.gam1 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3) + s(algae, k=3) + s(mean_complexity, k=3) + region,
                  data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail", weights = herb.gam.df$b.weight)
 summary(herb.gam1)
+plot(herb.gam1, pages = 1)
+concurvity(herb.gam1, full = TRUE)
 concurvity(herb.gam1, full = FALSE)
-herb.dd <- dredge(herb.gam1, rank = "AICc")
 
-herb.gam1.1 <- gam(abs(b) ~ s(mean_bio_hectare, k = 3) + s(mean_complexity, k=3),
-                   data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail", weights = herb.gam.df$b.weight)
-gam.check(herb.gam1.1)
-summary(herb.gam1.1)
-
-herb.gamb1 <- gam(mean_bio_hectare ~ s(mean_complexity, k=3),
+# Herbivore GAM 2 =====================================================================================
+# Remove structural complexity due to concurvity with hard coral > 0.3
+herb.gam2 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(hard_coral, k=3) + s(algae, k=3) + region,
                  data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail", weights = herb.gam.df$b.weight)
-summary(herb.gamb1)
-herb.gamb2 <- gam(abs(b) ~ s(mean_complexity, k=3),
-                 data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail", weights = herb.gam.df$b.weight)
-summary(herb.gamb2)
-herb.gamb3 <- gam(hard_coral ~ s(mean_complexity, k=3), data = herb.gam.df, 
-                  family = Gamma(link = log))
-summary(herb.gamb3)
-
-# Herbivore best fit model accoring to AICc
-herb.gam2 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(algae, k = 3) + s(hard_coral, k=3), 
-                 data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail")
 summary(herb.gam2)
-gam.check(herb.gam2)
+plot(herb.gam2, pages = 1)
+concurvity(herb.gam2, full = TRUE)
 concurvity(herb.gam2, full = FALSE)
 
-herb.gam3 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(algae, k = 3) + s(mean_complexity, k=3), 
-                 data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail")
+# Herbivore GAM 3 =====================================================================================
+# Remove hard coral due to concurvity with strucural complexity > 0.3
+herb.gam3 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(mean_complexity, k=3) + s(algae, k=3) + region,
+                 data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail", weights = herb.gam.df$b.weight)
 summary(herb.gam3)
-gam.check(herb.gam3)
+plot(herb.gam3, pages = 1)
 concurvity(herb.gam3, full = FALSE)
-dredge(herb.gam3)
-aic <- AICc(herb.gam2, herb.gam3)
-aic[order(aic$AICc),]
-
-herb.gam4 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(mean_complexity, k=3), data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail")
-summary(herb.gam4)
-concurvity(herb.gam4, full = FALSE)
-aic <- AICc(herb.gam2, herb.gam3, herb.gam4)
-aic[order(aic$AICc),]
-
-herb.gam5 <- gam(abs(b) ~ s(mean_bio_hectare, k=3) + s(mean_complexity, k=3) + te(mean_complexity, hard_coral), 
-                 data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail")
-summary(herb.gam5)
-dredge(herb.gam5)
-concurvity(herb.gam4, full = FALSE)
-aic <- AICc(herb.gam2, herb.gam3, herb.gam4, herb.gam5)
-aic[order(aic$AICc),]
-
-
-# covariance
-plot(hard_coral ~ mean_complexity, data = herb.gam.df)
-herb.gamb1 <- gam(hard_coral ~ s(mean_complexity, k = 3), data = herb.gam.df, family = gaussian(link = log))
-summary(herb.gamb1) # hard coral cover and complexity covary such that hard coral cover increases with structural complexity
-
-herb.gam.t1 <- gam(mean_bio_hectare ~ s(hard_coral, k = 3), data = herb.gam.df, Gamma(link = log))
-plot(herb.gam.t1)
-
-summary(lm(log(gravity.df$mean_bio_hectare) ~ log(gravity.df$mean_complexity)))
-ggplot() +
-  geom_point(data = gravity.df, aes(x = log(mean_complexity), y = log(mean_bio_hectare))) +
-  geom_smooth(data = gravity.df, aes(x = log(mean_complexity), y = log(mean_bio_hectare)), method = "lm")
-
-# Plot predicted values for trophic groups =============================================================
-
-# Influence of biomass on slope - CARNIVORE
-# carn.gam3 <- gam(abs(b) ~ s(mean_bio_hectare, k=3), data = carn.gam.df, family = Gamma(link = log), na.action = "na.fail")
-newd.carn.gam3 <- data.frame(mean_bio_hectare = seq(min(carn.gam.df$mean_bio_hectare), max(carn.gam.df$mean_bio_hectare), length.out = 2000),
-                             mean_complexity = seq(min(carn.gam.df$mean_complexity), max(carn.gam.df$mean_complexity), length.out = 2000))
-pred <- predict.gam(carn.gam1.1, newdata = newd.carn.gam3, se.fit = TRUE)
-upr <- pred$fit + (2 * pred$se.fit)
-lwr <- pred$fit - (2 * pred$se.fit)
-newd.carn.gam3$b_pred <- exp(pred$fit) * -1
-newd.carn.gam3$b_pred_upr <- exp(upr) * -1
-newd.carn.gam3$b_pred_lwr <- exp(lwr) * -1
-carn.plot1 <- ggplot() +
-  geom_line(aes(x = mean_bio_hectare, y = b_pred), size = 1.5, data = newd.carn.gam3) +
-  geom_ribbon(aes(x = mean_bio_hectare, ymin = b_pred_lwr, ymax = b_pred_upr), alpha = 0.5, fill = "gray", data = newd.carn.gam3) +
-  geom_point(aes(x = mean_bio_hectare, y = b, shape = region), data = carn.gam.df, size = 2) +
-  theme_classic() +
-  theme(legend.title = element_blank(),
-        legend.position = c(0.85,0.2)) +
-  scale_shape_discrete(labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
-  labs(x = "Biomass (kg/ha)", y = expression(paste("Size spectra (", italic("b"), ")")), tag = "a")
-  # labs(x = "Biomass kg/ha", y = "Size spectra (b)")
-  
-# Influence of structtural complexity on slope - CARNIVORE
-# carn.gam4 <- gam(abs(b) ~ s(hard_coral, k=3), data = carn.gam.df, family = Gamma(link = log), na.action = "na.fail")
-# newd.carn.gam4 <- data.frame(hard_coral = seq(min(carn.gam.df$hard_coral), max(carn.gam.df$hard_coral), length.out = 2000))
-# pred <- predict.gam(carn.gam4, newdata = newd.carn.gam4, se.fit = TRUE)
-# upr <- pred$fit + (2 * pred$se.fit)
-# lwr <- pred$fit - (2 * pred$se.fit)
-# newd.carn.gam4$b_pred <- exp(pred$fit) * -1
-# newd.carn.gam4$b_pred_upr <- exp(upr) * -1
-# newd.carn.gam4$b_pred_lwr <- exp(lwr) * -1
-carn.plot2 <- ggplot() +
-  geom_line(aes(x = mean_complexity, y = b_pred), size = 1.5, data = newd.carn.gam3) +
-  geom_ribbon(aes(x = mean_complexity, ymin = b_pred_lwr, ymax = b_pred_upr), alpha = 0.5, fill = "gray", data = newd.carn.gam3) +
-  geom_point(aes(x = mean_complexity, y = b, shape = region), data = carn.gam.df, size = 2) +
-  theme_classic() +
-  theme(legend.position = "none") +
-  scale_shape_discrete(labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
-  labs(x = "Structural complexity", y = "", tag = "b")
-
-carn.gam4 <- gam(mean_bio_hectare ~ s(mean_complexity, k=3), data = carn.gam.df, family = Gamma(link = log), na.action = "na.fail")
-newd.carn.gam4 <- data.frame(mean_complexity = seq(min(carn.gam.df$mean_complexity), max(carn.gam.df$mean_complexity), length.out = 2000))
-pred <- predict.gam(carn.gam4, newdata = newd.carn.gam4, se.fit = TRUE)
-upr <- pred$fit + (2 * pred$se.fit)
-lwr <- pred$fit - (2 * pred$se.fit)
-newd.carn.gam4$pred <- exp(pred$fit)
-newd.carn.gam4$pred_upr <- exp(upr)
-newd.carn.gam4$pred_lwr <- exp(lwr)
-carn.plot3 <- ggplot() +
-  geom_line(aes(x = mean_complexity, y = pred), size = 1.5, data = newd.carn.gam4) +
-  geom_ribbon(aes(x = mean_complexity, ymin = pred_lwr, ymax = pred_upr), alpha = 0.5, fill = "gray", data = newd.carn.gam4) +
-  geom_point(aes(x = mean_complexity, y = mean_bio_hectare, shape = region), data = carn.gam.df, size = 2) +
-  theme_classic() +
-  theme(legend.position = "none") +
-  scale_shape_discrete(labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
-  labs(x = "Structural complexity", y = "Biomass (kg/ha)", tag = "c")
-
-library(ggpubr)
-ggarrange(carn.plot1,carn.plot2,carn.plot3,)
-
-carn.gam4 <- gam(abs(b) ~ s(mean_complexity, k=3), data = carn.gam.df, family = Gamma(link = log), na.action = "na.fail")
-newd.carn.gam4 <- data.frame(mean_complexity = seq(min(carn.gam.df$mean_complexity), max(carn.gam.df$mean_complexity), length.out = 2000))
-pred <- predict.gam(carn.gam4, newdata = newd.carn.gam4, se.fit = TRUE)
-upr <- pred$fit + (2 * pred$se.fit)
-lwr <- pred$fit - (2 * pred$se.fit)
-newd.carn.gam4$b_pred <- exp(pred$fit) * -1
-newd.carn.gam4$b_pred_upr <- exp(upr) * -1
-newd.carn.gam4$b_pred_lwr <- exp(lwr) * -1
-ggplot() +
-  geom_line(aes(x = mean_complexity, y = b_pred), size = 1.5, data = newd.carn.gam4) +
-  geom_ribbon(aes(x = mean_complexity, ymin = b_pred_lwr, ymax = b_pred_upr), alpha = 0.5, fill = "gray", data = newd.carn.gam4) +
-  geom_point(aes(x = mean_complexity, y = b, shape = region), data = carn.gam.df, size = 2) +
-  theme_classic() +
-  theme(legend.title = element_blank()) +
-  scale_shape_discrete(labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
-  ylab("Size spectrum slope") +
-  xlab("mean_complexity")
-
-# Influence of biomass on slope - HERBIVORE
-# herb.gam3 <- gam(abs(b) ~ s(mean_bio_hectare, k=3), data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail")
-newd.herb.gam3 <- data.frame(mean_bio_hectare = seq(min(herb.gam.df$mean_bio_hectare), max(herb.gam.df$mean_bio_hectare), length.out = 2000),
-                            mean_complexity = seq(min(herb.gam.df$mean_complexity), max(herb.gam.df$mean_complexity), length.out = 2000))
-pred <- predict.gam(herb.gam1.1, newdata = newd.herb.gam3, se.fit = TRUE)
-upr <- pred$fit + (2 * pred$se.fit)
-lwr <- pred$fit - (2 * pred$se.fit)
-newd.herb.gam3$b_pred <- exp(pred$fit) * -1
-newd.herb.gam3$b_pred_upr <- exp(upr) * -1
-newd.herb.gam3$b_pred_lwr <- exp(lwr) * -1
-herb.plot1 <- ggplot() +
-  geom_line(aes(x = mean_bio_hectare, y = b_pred), size = 1.5, data = newd.herb.gam3) +
-  geom_ribbon(aes(x = mean_bio_hectare, ymin = b_pred_lwr, ymax = b_pred_upr), alpha = 0.5, fill = "gray", data = newd.herb.gam3) +
-  geom_point(aes(x = mean_bio_hectare, y = b, shape = region), data = herb.gam.df, size = 2) +
-  theme_classic() +
-  theme(legend.title = element_blank(),
-        legend.position = c(0.85,0.2)) +
-  scale_shape_discrete(labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
-  labs(x = "Biomass (kg/ha)", y = expression(paste("Size spectra (", italic("b"), ")")), tag = "a")
-
-# Influence of mean complexity on slope - HERBIVORE
-# herb.gam4 <- gam(abs(b) ~ s(mean_complexity, k=3), data = herb.gam.df, family = Gamma(link = log), na.action = "na.fail")
-# newd.herb.gam4 <- data.frame(mean_complexity = seq(min(herb.gam.df$mean_complexity), max(herb.gam.df$mean_complexity), length.out = 2000))
-# pred <- predict.gam(herb.gam4, newdata = newd.herb.gam4, se.fit = TRUE)
-# upr <- pred$fit + (2 * pred$se.fit)
-# lwr <- pred$fit - (2 * pred$se.fit)
-# newd.herb.gam4$b_pred <- exp(pred$fit) * -1
-# newd.herb.gam4$b_pred_upr <- exp(upr) * -1
-# newd.herb.gam4$b_pred_lwr <- exp(lwr) * -1
-herb.plot2 <- ggplot() +
-  geom_line(aes(x = mean_complexity, y = b_pred), size = 1.5, data = newd.herb.gam3) +
-  geom_ribbon(aes(x = mean_complexity, ymin = b_pred_lwr, ymax = b_pred_upr), alpha = 0.5, fill = "gray", data = newd.herb.gam3) +
-  geom_point(aes(x = mean_complexity, y = b, shape = region), data = herb.gam.df, size = 2) +
-  theme_classic() +
-  theme(legend.position = "none") +
-  scale_shape_discrete(labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
-  labs(x = "Structural complexity", y = expression(paste("Size spectra (", italic("b"), ")")), tag = "b")
-
-ggarrange(herb.plot1, herb.plot2, nrow = 2)
 
 # SUPPLEMENTAL FIGURES =================================================================================
 
