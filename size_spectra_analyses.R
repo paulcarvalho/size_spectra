@@ -707,7 +707,7 @@ trophb_plot <- ggplot() +
   geom_line(aes(x = carnx.PLB, y = carny.PLB), col = "#D55E00", lwd = 1) +
   geom_line(aes(x = herbx.PLB, y = herby.PLB), col = "#0072B2", lwd = 1) +
   annotate("text", x=0.1, y=1, label = expression(italic("b")[Carnivore]*" = "* -1.97), color = "#D55E00") +
-  annotate("text", x=0.1, y=0.5, label = expression(italic("b")[Herbivore]*" = "* -1.54), color = "#0072B2") +
+  annotate("text", x=0.1, y=0.4, label = expression(italic("b")[Herbivore]*" = "* -1.54), color = "#0072B2") +
   theme_classic()
 trophb_plot
 
@@ -740,30 +740,28 @@ slopesTroph_ci <- ggplot() +
 # cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ggarrange(trophb_plot, slopesTroph_ci, ncol=2, nrow=1)
 
-
 # Trophic position analysis for each region =========================================================
-
 # Create separate dataframes
-ra.carn <- carn_df %>% filter(region == "raja_ampat")
-ra.herb <- herb_df %>% filter(region == "raja_ampat")
-wa.carn <- carn_df %>% filter(region == "wakatobi")
-wa.herb <- herb_df %>% filter(region == "wakatobi")
-lo.carn <- carn_df %>% filter(region == "lombok")
-lo.herb <- herb_df %>% filter(region == "lombok")
+ra.carn <- carn.df %>% filter(region == "raja_ampat")
+ra.herb <- herb.df %>% filter(region == "raja_ampat")
+wa.carn <- carn.df %>% filter(region == "wakatobi")
+wa.herb <- herb.df %>% filter(region == "wakatobi")
+lo.carn <- carn.df %>% filter(region == "lombok")
+lo.herb <- herb.df %>% filter(region == "lombok")
         
 # Set MLE parameters
 
 # Raja Ampat 
-ra.carn.input <- set.params(ra.carn)
-ra.herb.input <- set.params(ra.herb)
+ra.carn.input <- set.params(ra.carn$biomass_kg)
+ra.herb.input <- set.params(ra.herb$biomass_kg)
 
 # Wakatobi
-wa.carn.input <- set.params(wa.carn)
-wa.herb.input <- set.params(wa.herb)
+wa.carn.input <- set.params(wa.carn$biomass_kg)
+wa.herb.input <- set.params(wa.herb$biomass_kg)
 
 # Lombok
-lo.carn.input <- set.params(lo.carn)
-lo.herb.input <- set.params(lo.herb)
+lo.carn.input <- set.params(lo.carn$biomass_kg)
+lo.herb.input <- set.params(lo.herb$biomass_kg)
 
 # MLE CARNIVORE - Raja Ampat
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
@@ -772,10 +770,8 @@ PLB.return.ra.carn <- mle_b(region=NA, x=ra.carn.input$biomass, log_x=ra.carn.in
                  x_min=ra.carn.input$min.biomass, x_max=ra.carn.input$max.biomass)
 PLB.bMLE.ra.carn.b <- PLB.return.ra.carn[[1]] 
 PLB.minLL.ra.carn.b <- PLB.return.ra.carn[[2]]
-
-trophic.plots(PLB.return.ra.carn, PLB.bMLE.ra.carn.b, PLB.minLL.ra.carn.b, ra.carn.input, mgpVals)
-title(main="Raja Ampat - Carnivore")
-
+ra.carnbIn95 <- slope.conf.int(PLB.bMLE.ra.carn.b, PLB.minLL.ra.carn.b$minimum, ra.carn.input)
+  
 # MLE HERBIVORE - Raja Ampat
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
 # as a starting point for nlm for MLE of b for PLB model.
@@ -783,9 +779,7 @@ PLB.return.ra.herb <- mle_b(region=NA, x=ra.herb.input$biomass, log_x=ra.herb.in
                  x_min=ra.herb.input$min.biomass, x_max=ra.herb.input$max.biomass)
 PLB.bMLE.ra.herb.b <- PLB.return.ra.herb[[1]] 
 PLB.minLL.ra.herb.b <- PLB.return.ra.herb[[2]]
-
-trophic.plots(PLB.return.ra.herb, PLB.bMLE.ra.herb.b, PLB.minLL.ra.herb.b, ra.herb.input, mgpVals)
-title(main="Raja Ampat - Herbivore")
+ra.herbbIn95 <- slope.conf.int(PLB.bMLE.ra.herb.b, PLB.minLL.ra.herb.b$minimum, ra.herb.input)
 
 # MLE CARNIVORE - Wakatobi
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
@@ -794,9 +788,7 @@ PLB.return.wa.carn <- mle_b(region=NA, x=wa.carn.input$biomass, log_x=wa.carn.in
                  x_min=wa.carn.input$min.biomass, x_max=wa.carn.input$max.biomass)
 PLB.bMLE.wa.carn.b <- PLB.return.wa.carn[[1]] 
 PLB.minLL.wa.carn.b <- PLB.return.wa.carn[[2]]
-
-trophic.plots(PLB.return.wa.carn, PLB.bMLE.wa.carn.b, PLB.minLL.wa.carn.b, wa.carn.input, mgpVals)
-title(main="Wakatobi - Carnivore")
+wa.carnbIn95 <- slope.conf.int(PLB.bMLE.wa.carn.b, PLB.minLL.wa.carn.b$minimum, wa.carn.input)
 
 # MLE HERBIVORE - Wakatobi
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
@@ -805,9 +797,7 @@ PLB.return.wa.herb <- mle_b(region=NA, x=wa.herb.input$biomass, log_x=wa.herb.in
                  x_min=wa.herb.input$min.biomass, x_max=wa.herb.input$max.biomass)
 PLB.bMLE.wa.herb.b <- PLB.return.wa.herb[[1]] 
 PLB.minLL.wa.herb.b <- PLB.return.wa.herb[[2]]
-
-trophic.plots(PLB.return.wa.herb, PLB.bMLE.wa.herb.b, PLB.minLL.wa.herb.b, wa.herb.input, mgpVals)
-title(main="Wakatobi - Herbivore")
+wa.herbbIn95 <- slope.conf.int(PLB.bMLE.wa.herb.b, PLB.minLL.wa.herb.b$minimum, wa.herb.input)
 
 # MLE CARNIVORE - Lombok
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
@@ -816,9 +806,7 @@ PLB.return.lo.carn <- mle_b(region=NA, x=lo.carn.input$biomass, log_x=lo.carn.in
                  x_min=lo.carn.input$min.biomass, x_max=lo.carn.input$max.biomass)
 PLB.bMLE.lo.carn.b <- PLB.return.lo.carn[[1]] 
 PLB.minLL.lo.carn.b <- PLB.return.lo.carn[[2]]
-
-trophic.plots(PLB.return.lo.carn, PLB.bMLE.lo.carn.b, PLB.minLL.lo.carn.b, lo.carn.input, mgpVals)
-title(main="Lombok - Carnivore")
+lo.carnbIn95 <- slope.conf.int(PLB.bMLE.lo.carn.b, PLB.minLL.lo.carn.b$minimum, lo.carn.input)
 
 # MLE HERBIVORE - Lombok
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
@@ -827,12 +815,41 @@ PLB.return.lo.herb <- mle_b(region=NA, x=lo.herb.input$biomass, log_x=lo.herb.in
                  x_min=lo.herb.input$min.biomass, x_max=lo.herb.input$max.biomass)
 PLB.bMLE.lo.herb.b <- PLB.return.lo.herb[[1]] 
 PLB.minLL.lo.herb.b <- PLB.return.lo.herb[[2]]
+lo.herbbIn95 <- slope.conf.int(PLB.bMLE.lo.herb.b, PLB.minLL.lo.herb.b$minimum, lo.herb.input)
 
-trophic.plots(PLB.return.lo.herb, PLB.bMLE.lo.herb.b, PLB.minLL.lo.herb.b, lo.herb.input, mgpVals)
-title(main="Lombok - Herbivore")
+
+slopesTrophReg_ci_df <- data.frame(region = c("Raja Ampat","Raja Ampat",
+                                              "Wakatobi", "Wakatobi",
+                                              "Lombok", "Lombok"),
+                                   tp = rep(c("Carnivore", "Herbivore"), 3),
+                                   b = c(PLB.bMLE.ra.carn.b, PLB.bMLE.ra.herb.b,
+                                         PLB.bMLE.wa.carn.b, PLB.bMLE.wa.herb.b,
+                                         PLB.bMLE.lo.carn.b, PLB.bMLE.lo.herb.b),
+                                   b_lo = c(ra.carnbIn95[1], ra.herbbIn95[1],
+                                            wa.carnbIn95[1], wa.herbbIn95[1],
+                                            lo.carnbIn95[1], lo.herbbIn95[1]),
+                                   b_up = c(ra.carnbIn95[2], ra.herbbIn95[2],
+                                            wa.carnbIn95[2], wa.herbbIn95[2],
+                                            lo.carnbIn95[2], lo.herbbIn95[2]))
+slopesTrophReg_ci_df$region <- as.factor(slopesTrophReg_ci_df$region)
+slopesTrophReg_ci_df$region <- factor(slopesTrophReg_ci_df$region, levels = c("Raja Ampat", "Wakatobi", "Lombok"))
+slopesTrophReg_ci <- ggplot() +
+  geom_point(data = slopesTrophReg_ci_df, aes(x = region, y = b, color = tp)) +
+  geom_errorbar(data = slopesTrophReg_ci_df, aes(x = region, ymin = b_lo, ymax = b_up, color = tp), width = 0.05) +
+  ylab(expression(italic("b"))) +
+  xlab("") +
+  scale_color_manual(values = c("#D55E00", "#0072B2")) +
+  theme_classic() +
+  theme(legend.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line.y = element_line(color = "black"),
+        axis.title.y = element_text(angle = 0, vjust = 0.5, size = 14),
+        legend.position = c(0.15,0.15))  
+
 
 # slope (b) for each trophic group in relation to biomass (kg/ha) ======================================
-
 sites.trophic <- fish.df %>%
   dplyr::select(site_name, tp) %>%
   distinct() %>%
