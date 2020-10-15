@@ -557,13 +557,33 @@ parEff_gam3_region <- data_list_gam3 %>%
 ggarrange(gam3_bio, gam3_comp, gam3_algae, parEff_gam3_region, nrow = 2, ncol = 2)
 
 # Density of small, medium and large fishes at each site ==================================================
+test <- fish.df %>%
+  mutate(size_cat = ifelse(biomass_kg < 0.2, "small",
+                    ifelse(biomass_kg >= 0.2 & biomass_kg < 1.2, "medium", "large"))) %>%
+  dplyr::group_by(region, site_name, transect, observer, size_cat) %>%
+  dplyr::summarize(biomass_kg = sum(biomass_kg)) %>%
+  dplyr::group_by(region, site_name, size_cat) %>%
+  dplyr::summarize(bio = mean(biomass_kg),
+            stderr = std.error(biomass_kg)) %>%
+  mutate(bio_ha = bio * 40) %>%
+  mutate(stderr_ha = stderr * 40) %>%
+  mutate(region_size = paste(region,size_cat, sep="")) %>%
+  ungroup()
+
+a1 <- aov(test$bio_ha ~ test$region_size)
+summary(a1)
+TukeyHSD(a1)
+a2 <- aov(test$bio_ha ~ test$region + test$size_cat)
+summary(a2)
+TukeyHSD(a2)
+
 fish.sizes.df <- fish.df %>%
   mutate(size_cat = ifelse(biomass_kg < 0.2, "small",
                     ifelse(biomass_kg >= 0.2 & biomass_kg < 1.2, "medium", "large"))) %>%
-  group_by(region, site_name, transect, observer, size_cat) %>%
-  summarize(biomass_kg = sum(biomass_kg)) %>%
-  group_by(region, size_cat) %>%
-  summarize(bio = mean(biomass_kg),
+  dplyr::group_by(region, site_name, transect, observer, size_cat) %>%
+  dplyr::summarize(biomass_kg = sum(biomass_kg)) %>%
+  dplyr::group_by(region, size_cat) %>%
+  dplyr::summarize(bio = mean(biomass_kg),
             stderr = std.error(biomass_kg)) %>%
   mutate(bio_ha = bio * 40) %>%
   mutate(stderr_ha = stderr * 40) %>%
