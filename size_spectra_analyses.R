@@ -1026,6 +1026,109 @@ summary(herb.gam3)
 plot(herb.gam3, pages = 1)
 concurvity(herb.gam3, full = FALSE)
 
+# Plot sum of AICc weights ============================================================================
+dd.carn.gam2 <- dredge(carn.gam2)
+dd.carn.gam3 <- dredge(carn.gam3)
+dd.herb.gam2 <- dredge(herb.gam2)
+dd.herb.gam3 <- dredge(herb.gam3)
+
+# Carn gams
+dd.carn.gam2.df <- data.frame(Biomass = dd.carn.gam2$`s(mean_bio_hectare, k = 3)`,
+                              Algae = dd.carn.gam2$`s(algae, k = 3)`,
+                              Hardcoral = dd.carn.gam2$`s(hard_coral, k = 3)`,
+                              weight = dd.carn.gam2$weight)
+dd.carn.gam2.df <- dd.carn.gam2.df %>% 
+  gather(., "covariate", "included", -weight) %>%
+  na.omit() %>%
+  dplyr::group_by(covariate) %>%
+  dplyr::summarize(sum_weight = sum(weight)) %>%
+  mutate(tp = "Carnivore") %>%
+  mutate(model = "GAMs with hard coral cover")
+dd.carn.gam3.df <- data.frame(Biomass = dd.carn.gam3$`s(mean_bio_hectare, k = 3)`,
+                              Algae = dd.carn.gam3$`s(algae, k = 3)`,
+                              Complexity = dd.carn.gam3$`s(mean_complexity, k = 3)`,
+                              weight = dd.carn.gam3$weight)
+dd.carn.gam3.df <- dd.carn.gam3.df %>% 
+  gather(., "covariate", "included", -weight) %>%
+  na.omit() %>%
+  dplyr::group_by(covariate) %>%
+  dplyr::summarize(sum_weight = sum(weight)) %>%
+  mutate(tp = "Carnivore") %>%
+  mutate(model = "GAMs with structural complexity")
+
+# Herb gams
+dd.herb.gam2.df <- data.frame(Biomass = dd.herb.gam2$`s(mean_bio_hectare, k = 3)`,
+                              Algae = dd.herb.gam2$`s(algae, k = 3)`,
+                              Hardcoral = dd.herb.gam2$`s(hard_coral, k = 3)`,
+                              weight = dd.herb.gam2$weight)
+dd.herb.gam2.df <- dd.herb.gam2.df %>% 
+  gather(., "covariate", "included", -weight) %>%
+  na.omit() %>%
+  dplyr::group_by(covariate) %>%
+  dplyr::summarize(sum_weight = sum(weight)) %>%
+  mutate(tp = "Herbivore") %>%
+  mutate(model = "GAMs with hard coral cover")
+dd.herb.gam3.df <- data.frame(Biomass = dd.herb.gam3$`s(mean_bio_hectare, k = 3)`,
+                              Algae = dd.herb.gam3$`s(algae, k = 3)`,
+                              Complexity = dd.herb.gam3$`s(mean_complexity, k = 3)`,
+                              weight = dd.herb.gam3$weight)
+dd.herb.gam3.df <- dd.herb.gam3.df %>% 
+  gather(., "covariate", "included", -weight) %>%
+  na.omit() %>%
+  dplyr::group_by(covariate) %>%
+  dplyr::summarize(sum_weight = sum(weight)) %>%
+  mutate(tp = "Herbivore") %>%
+  mutate(model = "GAMs with structural complexity")
+
+# Merge data frames
+dd.gam.tp.df <- rbind(dd.carn.gam2.df, dd.carn.gam3.df, dd.herb.gam2.df, dd.herb.gam3.df)
+dd.gam.tp.df$model <- as.factor(dd.gam.tp.df$model)
+dd.gam.tp.df$covariate <- c("Algal cover", "Biomass", "Hard coral cover", 
+                            "Algal cover", "Biomass", "Structural complexity",
+                            "Algal cover", "Biomass", "Hard coral cover", 
+                            "Algal cover", "Biomass", "Structural complexity")
+
+# Plot
+aicc_sums_tp_plot <- ggplot(data=dd.gam.tp.df, aes(x = covariate, y = sum_weight, fill = tp)) +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        axis.line = element_line()) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_hline(yintercept = 0.5, lty = "dashed") +
+  scale_y_continuous(expand = c(0,0)) +
+  coord_flip() +
+  facet_grid(rows = vars(model), scales = "free_y", space = "free_y", switch = "y") +
+  theme(strip.background = element_rect(fill="white"),
+        strip.placement = "outside",
+        legend.title = element_blank(),
+        legend.position = c(0.92, 0.95)) +
+  xlab("") +
+  ylab("Sum of AICc weights") +
+  scale_fill_manual(values = c("#D55E00", "#0072B2"))
+aicc_sums_tp_plot
+
+  
+  
+  
+  
+  
+
+aicc_sums_plot <- ggplot(data=dd.gam.tp.df, aes(x = covariate, y = sum_weight, fill = model)) +
+  
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_hline(yintercept = 0.5, lty = "dashed") +
+  scale_fill_manual(values = c("grey80", "grey40")) +
+  scale_y_continuous(expand = c(0,0)) +
+  coord_flip() +
+  facet_grid(rows = vars(model), scales = "free_y", space = "free_y", switch = "y") + #
+  theme(strip.background = element_rect(fill="white"),
+        strip.placement = "outside") +
+  guides(fill = FALSE) +
+  xlab("") +
+  ylab("Sum of AICc weights")
+
 # SUPPLEMENTAL FIGURES =================================================================================
 
 # Gravity against biomass -------------------------------------------------
