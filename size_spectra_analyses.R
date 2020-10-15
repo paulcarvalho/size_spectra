@@ -409,14 +409,13 @@ aicc_sums_plot <- ggplot(data=dd.gam.df, aes(x = covariate, y = sum_weight, fill
   xlab("") +
   ylab("Sum of AICc weights")
 
-# Plot partial effects =================================================================================
-
+# GAM 2 partial effects ================================================================================
 covariates.df$region <- factor(covariates.df$region, levels = c("raja_ampat", "wakatobi", "lombok"))
 
-# GAM 2 partial effects
+# Biomass
 parEff_gam2 <- plot_gam(gam2)
 parEff_gam2_bio <- parEff_gam2[1]$data %>% filter(term == "mean_bio_hectare")
-ggplot() +
+gam2_bio <- ggplot() +
   geom_line(data = parEff_gam2_bio, aes(x = value, y=-fit), size = 1) +
   geom_ribbon(data = parEff_gam2_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
   geom_point(data = covariates.df, aes(x = mean_bio_hectare, y = b, color = region)) +
@@ -427,35 +426,69 @@ ggplot() +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
   xlab("Biomass (kg/ha)")
 
+# Hard coral
 parEff_gam2_hardcoral <- parEff_gam2[1]$data %>% filter(term == "hard_coral")
-ggplot() +
+gam2_hardcoral <- ggplot() +
   geom_line(data = parEff_gam2_hardcoral, aes(x = value, y=-fit), size = 1) +
   geom_ribbon(data = parEff_gam2_hardcoral, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
   geom_point(data = covariates.df, aes(x = hard_coral, y = b, color = region)) +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
   theme(legend.title = element_blank(),
-        legend.position = c(0.85, 0.25)) +
+        legend.position = "none") +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
   xlab("Hard coral cover (%)")
   
+# Algae
 parEff_gam2_algae <- parEff_gam2[1]$data %>% filter(term == "algae")
-ggplot() +
+gam2_algae <- ggplot() +
   geom_line(data = parEff_gam2_algae, aes(x = value, y=-fit), size = 1) +
   geom_ribbon(data = parEff_gam2_algae, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
   geom_point(data = covariates.df, aes(x = algae, y = b, color = region)) +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
   theme(legend.title = element_blank(),
-        legend.position = c(0.85, 0.25)) +
+        legend.position = "none") +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
   xlab("Algal cover (%)")
 
+# Region
+df_gam2 <- covariates.df %>% 
+  dplyr::select(mean_bio_hectare,hard_coral,algae,region)
+newdf_gam2 <- data.frame(mean_bio_hectare=646.57,
+                         hard_coral=32.371,
+                         algae=3.3713,
+                         region=levels(df_gam2$region))
 
-# GAM 3 partial effects
+data_list_gam2 <- newdf_gam2 %>% bind_cols(
+  tibble::as_tibble(
+  predict(gam2, ., se=TRUE))) %>%
+  mutate(ll = gam2$family$linkinv(fit - 1.96*se.fit),
+         ul = gam2$family$linkinv(fit + 1.96*se.fit),
+         fit = gam2$family$linkinv(fit)) %>%
+  dplyr::select(region, fit, ll, ul) %>%
+  mutate(region = as.factor(region))
+data_list_gam2
+
+data_list_gam2$region <- factor(data_list_gam2$region, levels = c("raja_ampat", "wakatobi", "lombok"))
+
+parEff_gam2_region <- data_list_gam2 %>%
+  ggplot(aes(x = region, y = -fit, group = 1)) +
+  geom_errorbar(aes(ymin = -ll, ymax = -ul), colour = c("#E69F00", "#56B4E9", "#009E73"), width = 0.1) +
+  geom_line(color = "light blue4") +
+  scale_x_discrete(labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
+  theme_classic() +
+  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  xlab("")
+
+ggarrange(gam2_bio, gam2_hardcoral, gam2_algae, parEff_gam2_region, nrow = 2, ncol = 2)
+
+# GAM 3 partial effects ================================================================================
 parEff_gam3 <- plot_gam(gam3)
+
+# Biomass
 parEff_gam3_bio <- parEff_gam3[1]$data %>% filter(term == "mean_bio_hectare")
-ggplot() +
+gam3_bio <- ggplot() +
   geom_line(data = parEff_gam3_bio, aes(x = value, y=-fit), size = 1) +
   geom_ribbon(data = parEff_gam3_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
   geom_point(data = covariates.df, aes(x = mean_bio_hectare, y = b, color = region)) +
@@ -466,29 +499,62 @@ ggplot() +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
   xlab("Biomass (kg/ha)")
 
+# Structural complexity
 parEff_gam3_comp <- parEff_gam3[1]$data %>% filter(term == "mean_complexity")
-ggplot() +
+gam3_comp <- ggplot() +
   geom_line(data = parEff_gam3_comp, aes(x = value, y=-fit), size = 1) +
   geom_ribbon(data = parEff_gam3_comp, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
   geom_point(data = covariates.df, aes(x = mean_complexity, y = b, color = region)) +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
   theme(legend.title = element_blank(),
-        legend.position = c(0.85, 0.25)) +
+        legend.position = "none") +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
   xlab("Structural complexity")
 
+# Algae
 parEff_gam3_algae <- parEff_gam3[1]$data %>% filter(term == "algae")
-ggplot() +
+gam3_algae <- ggplot() +
   geom_line(data = parEff_gam3_algae, aes(x = value, y=-fit), size = 1) +
   geom_ribbon(data = parEff_gam3_algae, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
   geom_point(data = covariates.df, aes(x = algae, y = b, color = region)) +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
   theme(legend.title = element_blank(),
-        legend.position = c(0.85, 0.25)) +
+        legend.position = "none") +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
   xlab("Algal cover (%)")
+
+# Region
+df_gam3 <- covariates.df %>% 
+  dplyr::select(mean_bio_hectare,mean_complexity,algae,region)
+newdf_gam3 <- data.frame(mean_bio_hectare=646.57,
+                         mean_complexity=2.888,
+                         algae=3.3713,
+                         region=levels(df_gam3$region))
+
+data_list_gam3 <- newdf_gam3 %>% bind_cols(
+  tibble::as_tibble(
+  predict(gam3, ., se=TRUE))) %>%
+  mutate(ll = gam3$family$linkinv(fit - 1.96*se.fit),
+         ul = gam3$family$linkinv(fit + 1.96*se.fit),
+         fit = gam3$family$linkinv(fit)) %>%
+  dplyr::select(region, fit, ll, ul) %>%
+  mutate(region = as.factor(region))
+data_list_gam3
+
+data_list_gam3$region <- factor(data_list_gam3$region, levels = c("raja_ampat", "wakatobi", "lombok"))
+
+parEff_gam3_region <- data_list_gam3 %>%
+  ggplot(aes(x = region, y = -fit, group = 1)) +
+  geom_errorbar(aes(ymin = -ll, ymax = -ul), colour = c("#E69F00", "#56B4E9", "#009E73"), width = 0.1) +
+  geom_line(color = "light blue4") +
+  scale_x_discrete(labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
+  theme_classic() +
+  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  xlab("")
+
+ggarrange(gam3_bio, gam3_comp, gam3_algae, parEff_gam3_region, nrow = 2, ncol = 2)
 
 # Density of small, medium and large fishes at each site ==================================================
 fish.sizes.df <- fish.df %>%
@@ -539,14 +605,12 @@ ggplot() +
   geom_bar(data = species.herb, aes(x = reorder(genus_species, total), y = total), stat = "identity") +
   coord_flip()
 
-# Trophic position analysis for entire dataset =========================================================
-
-# Set MLE parameters
+# MLE Carnivore biomass ================================================================================
 
 # Carnivore biomass
-carn.input <- set.params(carn_df)
+carn.input <- set.params(carn.df$biomass_kg)
 # Herbivore biomass
-herb.input <- set.params(herb_df)
+herb.input <- set.params(herb.df$biomass_kg)
 
 # MLE CARNIVORE
 # Use analytical value of MLE b for PL model (Box 1, Edwards et al. 2007)
