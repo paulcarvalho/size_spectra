@@ -404,6 +404,7 @@ dd.gam3.df <- dd.gam3.df %>%
 
 dd.gam.df <- rbind(dd.gam2.df, dd.gam3.df)
 dd.gam.df$covariate <- c("Algal cover", "Biomass", "Hard coral cover", "Algal cover", "Biomass", "Structural complexity")
+dd.gam.df$facet_fill_color <- c(rep("grey80",3),rep("grey40",3))
 
 # Plot
 aicc_sums_plot <- ggplot(data=dd.gam.df, aes(x = covariate, y = sum_weight, fill = model)) +
@@ -414,15 +415,25 @@ aicc_sums_plot <- ggplot(data=dd.gam.df, aes(x = covariate, y = sum_weight, fill
         axis.line = element_line()) +
   geom_bar(stat = "identity", position = "dodge") +
   geom_hline(yintercept = 0.5, lty = "dashed") +
-  scale_fill_manual(values = c("grey80", "grey40")) +
-  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_manual(values = c("grey80", "grey50")) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,1.05)) +
   coord_flip() +
-  facet_grid(rows = vars(model), scales = "free_y", space = "free_y", switch = "y") + #
-  theme(strip.background = element_rect(fill="white"),
-        strip.placement = "outside") +
+  facet_grid(rows = vars(model), scales = "free_y", space = "free_y") + #
+  theme(strip.background = element_rect(fill=c("grey80", "grey50")),
+        strip.placement = "outside",
+        strip.text.y = element_text(angle = 90, face = "bold")) +
   guides(fill = FALSE) +
   xlab("") +
   ylab("Sum of AICc weights")
+
+g <- ggplot_gtable(ggplot_build(aicc_sums_plot))
+stripr <- which(grepl('strip-r', g$layout$name))
+fills <- c("grey80", "grey40")
+j2 <- which(grepl('rect', g$grobs[[11]]$grobs[[1]]$childrenOrder))
+g$grobs[[11]]$grobs[[1]]$children[[1]]$gp$fill <- "grey50"
+grid.draw(g)
+require(ggplotify)
+aicc_sums_plot <- as_ggplot(g)
 
 # GAM 2 partial effects ================================================================================
 covariates.df$region <- factor(covariates.df$region, levels = c("raja_ampat", "wakatobi", "lombok"))
@@ -439,7 +450,7 @@ gam2_bio <- ggplot() +
   theme(legend.title = element_blank(),
         legend.position = c(0.85, 0.25)) +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
-  xlab("Biomass (kg/ha)")
+  xlab("")
 
 # Hard coral
 parEff_gam2_hardcoral <- parEff_gam2[1]$data %>% filter(term == "hard_coral")
@@ -510,7 +521,7 @@ gam3_bio <- ggplot() +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
   theme(legend.title = element_blank(),
-        legend.position = c(0.85, 0.25)) +
+        legend.position = "none") +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
   xlab("Biomass (kg/ha)")
 
@@ -570,6 +581,9 @@ parEff_gam3_region <- data_list_gam3 %>%
   xlab("")
 
 ggarrange(gam3_bio, gam3_comp, gam3_algae, parEff_gam3_region, nrow = 2, ncol = 2)
+
+# Plot with AIC sum and partial effects ===================================================================
+ggarrange(aicc_sums_plot, ggarrange(gam2_bio, gam3_bio, ncol=1, labels = c("b","c")), ncol = 2, labels = "a")
 
 # Density of small, medium and large fishes at each site ==================================================
 test <- fish.df %>%
@@ -718,14 +732,15 @@ trophb_plot <- ggplot() +
              color = "#0072B2", size = 2, alpha = 0.25) +
   xlab(expression(paste("Body sizes, ", italic("x"), " (kg)"))) +
   ylab(expression(paste("Number of body sizes", " ">=" ", italic("x")))) +
-  xlim((c(carn.input$min.biomass, carn.input$max.biomass))) +
-  ylim((c(1, length(carn.input$biomass)))) +
-  scale_y_continuous(trans = 'log10', breaks = c(1,10,100,1000,10000)) +
-  scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10)) +
+  scale_y_continuous(trans = 'log10', breaks = c(1,10,100,1000,10000),
+                     limits = c(0.25, max(length(carn.input$biomass),length(herb.input$biomass)))) +
+  scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10),
+                     limits = c(min(carn.input$min.biomass, herb.input$min.biomass),
+                                max(carn.input$max.biomass, herb.input$max.biomass))) +
   geom_line(aes(x = carnx.PLB, y = carny.PLB), col = "#D55E00", lwd = 1) +
   geom_line(aes(x = herbx.PLB, y = herby.PLB), col = "#0072B2", lwd = 1) +
-  annotate("text", x=0.1, y=1, label = expression(italic("b")[Carnivore]*" = "* -1.97), color = "#D55E00") +
-  annotate("text", x=0.1, y=0.4, label = expression(italic("b")[Herbivore]*" = "* -1.54), color = "#0072B2") +
+  annotate("text", x=0.1, y=10, label = expression(italic("b")[Carnivore]*" = "* -1.97), color = "#D55E00") +
+  annotate("text", x=0.1, y=3, label = expression(italic("b")[Herbivore]*" = "* -1.54), color = "#0072B2") +
   theme_classic()
 trophb_plot
 
@@ -753,10 +768,9 @@ slopesTroph_ci <- ggplot() +
         panel.border = element_blank(),
         axis.line.y = element_line(color = "black"),
         axis.title.y = element_text(angle = 0, vjust = 0.5, size = 14),
-        legend.position = c(0.5,0.5))
+        legend.position = c(0.55,0.95))
 
-# cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-ggarrange(trophb_plot, slopesTroph_ci, ncol=2, nrow=1)
+ggarrange(trophb_plot, slopesTroph_ci, ncol=2, nrow=1, labels = c("a", "b"))
 
 # Trophic position analysis for each region =========================================================
 # Create separate dataframes
@@ -1128,19 +1142,27 @@ aicc_sums_tp_plot <- ggplot(data=dd.gam.tp.df, aes(x = covariate, y = sum_weight
 aicc_sums_tp_plot
 
 # Carn GAM 2 partial effects ================================================================================
+# Dummy plot for legend
+# dummyplot <- ggplot() +
+#   geom_line(data = parEff_carngam2_bio, aes(x = value, y=-fit, color = "#D55E00"), size = 1) +
+#   geom_line(data = parEff_carngam2_bio, aes(x = value, y=-fit, color = "#0072B2"), size = 1) +
+#   scale_color_manual(values = c("#D55E00","#0072B2"),
+#                      labels = c("Carnivore models", "Herbivore models")) +
+#   theme_classic()
+
 # Biomass
 parEff_carngam2 <- plot_gam(carn.gam2)
 parEff_carngam2_bio <- parEff_carngam2[1]$data %>% filter(term == "mean_bio_hectare")
 carngam2_bio <- ggplot() +
-  geom_line(data = parEff_carngam2_bio, aes(x = value, y=-fit), size = 1) +
-  geom_ribbon(data = parEff_carngam2_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
   geom_point(data = carn.gam.df, aes(x = mean_bio_hectare, y = b, color = region)) +
+  geom_line(data = parEff_carngam2_bio, aes(x = value, y=-fit), color = "#D55E00", size = 1) +
+  geom_ribbon(data = parEff_carngam2_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "#D55E00", alpha = 0.2) +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
   theme(legend.title = element_blank(),
         legend.position = c(0.85, 0.25)) +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
-  xlab("Biomass (kg/ha)")
+  xlab("Carnivore biomass (kg/ha)")
 
 # Hard coral
 parEff_carngam2_hardcoral <- parEff_carngam2[1]$data %>% filter(term == "hard_coral")
@@ -1202,15 +1224,16 @@ ggarrange(carngam2_bio, carngam2_hardcoral, carngam2_algae, parEff_carngam2_regi
 parEff_carngam3 <- plot_gam(carn.gam3)
 parEff_carngam3_bio <- parEff_carngam3[1]$data %>% filter(term == "mean_bio_hectare")
 carngam3_bio <- ggplot() +
-  geom_line(data = parEff_carngam3_bio, aes(x = value, y=-fit), size = 1) +
-  geom_ribbon(data = parEff_carngam3_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_line(data = parEff_carngam3_bio, aes(x = value, y=-fit), color = "#D55E00", size = 1) +
+  geom_ribbon(data = parEff_carngam3_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "#D55E00", alpha = 0.2) +
   geom_point(data = carn.gam.df, aes(x = mean_bio_hectare, y = b, color = region)) +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
   theme(legend.title = element_blank(),
-        legend.position = c(0.85, 0.25)) +
-  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
-  xlab("Biomass (kg/ha)")
+        legend.position = "none") +
+  # ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  ylab("") +
+  xlab("Carnivore Biomass (kg/ha)")
 
 # Structural complexity
 parEff_carngam3_comp <- parEff_carngam3[1]$data %>% filter(term == "mean_complexity")
@@ -1272,21 +1295,21 @@ ggarrange(carngam3_bio, carngam3_comp, carngam3_algae, parEff_carngam3_region, n
 parEff_herbgam2 <- plot_gam(herb.gam2)
 parEff_herbgam2_bio <- parEff_herbgam2[1]$data %>% filter(term == "mean_bio_hectare")
 herbgam2_bio <- ggplot() +
-  geom_line(data = parEff_herbgam2_bio, aes(x = value, y=-fit), size = 1) +
-  geom_ribbon(data = parEff_herbgam2_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_line(data = parEff_herbgam2_bio, aes(x = value, y=-fit), color = "#0072B2", size = 1) +
+  geom_ribbon(data = parEff_herbgam2_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "#0072B2", alpha = 0.3) +
   geom_point(data = herb.gam.df, aes(x = mean_bio_hectare, y = b, color = region)) +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
   theme(legend.title = element_blank(),
-        legend.position = c(0.85, 0.25)) +
+        legend.position = "none") +
   ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
-  xlab("Biomass (kg/ha)")
+  xlab("Herbivore biomass (kg/ha)")
 
 # Hard coral
 parEff_herbgam2_hardcoral <- parEff_herbgam2[1]$data %>% filter(term == "hard_coral")
 herbgam2_hardcoral <- ggplot() +
-  geom_line(data = parEff_herbgam2_hardcoral, aes(x = value, y=-fit), size = 1) +
-  geom_ribbon(data = parEff_herbgam2_hardcoral, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_line(data = parEff_herbgam2_hardcoral, aes(x = value, y=-fit), color = "#0072B2", size = 1) +
+  geom_ribbon(data = parEff_herbgam2_hardcoral, aes(x = value, ymin = -ll, ymax = -ul), fill = "#0072B2", alpha = 0.3) +
   geom_point(data = herb.gam.df, aes(x = hard_coral, y = b, color = region)) +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
@@ -1342,27 +1365,29 @@ ggarrange(herbgam2_bio, herbgam2_hardcoral, herbgam2_algae, parEff_herbgam2_regi
 parEff_herbgam3 <- plot_gam(herb.gam3)
 parEff_herbgam3_bio <- parEff_herbgam3[1]$data %>% filter(term == "mean_bio_hectare")
 herbgam3_bio <- ggplot() +
-  geom_line(data = parEff_herbgam3_bio, aes(x = value, y=-fit), size = 1) +
-  geom_ribbon(data = parEff_herbgam3_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_line(data = parEff_herbgam3_bio, aes(x = value, y=-fit), color = "#0072B2", size = 1) +
+  geom_ribbon(data = parEff_herbgam3_bio, aes(x = value, ymin = -ll, ymax = -ul), fill = "#0072B2", alpha = 0.3) +
   geom_point(data = herb.gam.df, aes(x = mean_bio_hectare, y = b, color = region)) +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
   theme(legend.title = element_blank(),
-        legend.position = c(0.85, 0.25)) +
-  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
-  xlab("Biomass (kg/ha)")
+        legend.position = "none") +
+  # ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  ylab("") + 
+  xlab("Herbivore biomass (kg/ha)")
 
 # Structural complexity
 parEff_herbgam3_comp <- parEff_herbgam3[1]$data %>% filter(term == "mean_complexity")
 herbgam3_comp <- ggplot() +
-  geom_line(data = parEff_herbgam3_comp, aes(x = value, y=-fit), size = 1) +
-  geom_ribbon(data = parEff_herbgam3_comp, aes(x = value, ymin = -ll, ymax = -ul), fill = "light blue4", alpha = 0.3) +
+  geom_line(data = parEff_herbgam3_comp, aes(x = value, y=-fit), color = "#0072B2", size = 1) +
+  geom_ribbon(data = parEff_herbgam3_comp, aes(x = value, ymin = -ll, ymax = -ul), fill = "#0072B2", alpha = 0.3) +
   geom_point(data = herb.gam.df, aes(x = mean_complexity, y = b, color = region)) +
   scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"), labels = c("Raja Ampat", "Wakatobi", "Lombok")) +
   theme_classic() +
   theme(legend.title = element_blank(),
         legend.position = "none") +
-  ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  # ylab(expression(paste("Size spectrum slope (", italic(b), ")"))) +
+  ylab("") +
   xlab("Structural complexity")
   
 # Algae
@@ -1406,6 +1431,13 @@ parEff_herbgam3_region <- data_list_herbgam3 %>%
   xlab("")
 
 ggarrange(herbgam3_bio, herbgam3_comp, herbgam3_algae, parEff_herbgam3_region, nrow = 2, ncol = 2)
+
+# Figure 6 =============================================================================================
+ggarrange(carngam2_bio, carngam3_bio,
+          herbgam2_bio, herbgam3_bio,
+          herbgam2_hardcoral, herbgam3_comp,
+          ncol = 2, nrow = 3,
+          labels = c("a","b","c","d","e","f"))
 
 # SUPPLEMENTAL FIGURES =================================================================================
 
