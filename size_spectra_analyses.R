@@ -107,14 +107,15 @@ rab_plot <- ggplot() +
   geom_point(aes(x = (sort(ra.input$biomass, decreasing=TRUE)), y = (1:length(ra.input$biomass))),
              color = "#E69F00", size = 2, alpha = 0.3) +
   xlab(expression(paste("Body sizes, ", italic("x"), " (kg)"))) +
-  ylab(expression(paste("Number of body sizes", " ">=" ", italic("x")))) +
-  xlim((c(ra.input$min.biomass, ra.input$max.biomass))) +
-  ylim((c(1, length(ra.input$biomass)))) +
-  scale_y_continuous(trans = 'log10') +
-  scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10)) +
+  ylab(expression(paste("Number of body sizes", " ">=" ", italic("x"), "    "))) +
+  scale_y_continuous(trans = 'log10', breaks = c(1,10,100,1000,10000),
+                     limits = c(0.25, max(length(wa.input$biomass), length(ra.input$biomass), length(lo.input$biomass)))) +
+  scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10),
+                     limits = c(min(ra.input$min.biomass,wa.input$min.biomass,lo.input$min.biomass), 
+                                max(ra.input$max.biomass,wa.input$max.biomass,lo.input$max.biomass))) +
   geom_line(aes(x = rax.PLB, y = ray.PLB), col = 'black', lwd = 1) +
-  annotate("text", x=0.0722, y=15, label="Raja Ampat") +
-  annotate("text", x=0.07, y=5, label = expression(paste(italic("b = "), -1.58))) +
+  annotate("text", x=0.08, y=10, label="  Raja Ampat") +
+  annotate("text", x=0.08, y=3, label = expression(paste(italic("b = "), -1.58))) +
   theme_classic()
 
 # Values of b to test to obtain confidence interval. For the real movement data
@@ -153,14 +154,15 @@ wab_plot <- ggplot() +
   geom_point(aes(x = (sort(wa.input$biomass, decreasing=TRUE)), y = (1:length(wa.input$biomass))), 
              color = "#56B4E9", size = 2, alpha = 0.3) +
   xlab(expression(paste("Body sizes, ", italic("x"), " (kg)"))) +
-  ylab(expression(paste("Number of body sizes", " ">=" ", italic("x")))) +
-  xlim((c(wa.input$min.biomass, wa.input$max.biomass))) +
-  ylim((c(1, length(wa.input$biomass)))) +
-  scale_y_continuous(trans = 'log10', breaks = c(1,10,100,1000,10000)) +
-  scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10)) +
+  ylab(expression(paste("Number of body sizes", " ">=" ", italic("x"), "    "))) +
+  scale_y_continuous(trans = 'log10', breaks = c(1,10,100,1000,10000),
+                     limits = c(0.25, max(length(wa.input$biomass), length(ra.input$biomass), length(lo.input$biomass)))) +
+  scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10),
+                     limits = c(min(ra.input$min.biomass,wa.input$min.biomass,lo.input$min.biomass), 
+                                max(ra.input$max.biomass,wa.input$max.biomass,lo.input$max.biomass))) +
   geom_line(aes(x = wax.PLB, y = way.PLB), col = 'black', lwd = 1) +
-  annotate("text", x=0.069, y=5.5, label="Wakatobi") +
-  annotate("text", x=0.07, y=1.5, label = expression(paste(italic("b = "), -1.71))) +
+  annotate("text", x=0.08, y=10, label="Wakatobi") +
+  annotate("text", x=0.08, y=3, label = expression(paste(italic("  b = "), -1.71))) +
   theme_classic()
 
 # Values of b to test to obtain confidence interval. For the real movement data
@@ -199,14 +201,15 @@ lob_plot <- ggplot() +
   geom_point(aes(x = (sort(lo.input$biomass, decreasing=TRUE)), y = (1:length(lo.input$biomass))), 
              color = "#009E73", size = 2, alpha = 0.3) +
   xlab(expression(paste("Body sizes, ", italic("x"), " (kg)"))) +
-  ylab(expression(paste("Number of body sizes", " ">=" ", italic("x")))) +
-  xlim((c(lo.input$min.biomass, lo.input$max.biomass))) +
-  ylim((c(1, length(lo.input$biomass)))) +
-  scale_y_continuous(trans = 'log10', breaks = c(1,10,100,1000,10000)) +
-  scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10)) +
+  ylab(expression(paste("Number of body sizes", " ">=" ", italic("x"), "    "))) +
+  scale_y_continuous(trans = 'log10', breaks = c(1,10,100,1000,10000),
+                     limits = c(0.25, max(length(wa.input$biomass), length(ra.input$biomass), length(lo.input$biomass)))) +
+  scale_x_continuous(trans = 'log10', breaks = c(0, 1, 5, 10),
+                     limits = c(min(ra.input$min.biomass,wa.input$min.biomass,lo.input$min.biomass), 
+                                max(ra.input$max.biomass,wa.input$max.biomass,lo.input$max.biomass))) +
   geom_line(aes(x = lox.PLB, y = loy.PLB), col = 'black', lwd = 1) +
-  annotate("text", x=0.069, y=15, label="Lombok") +
-  annotate("text", x=0.07, y=5, label = expression(paste(italic("b = "), -2.06))) +
+  annotate("text", x=0.07, y=10, label="Lombok") +
+  annotate("text", x=0.08, y=3, label = expression(paste(italic("b = "), -2.06))) +
   theme_classic()
 
 # Values of b to test to obtain confidence interval. For the real movement data
@@ -246,10 +249,10 @@ slopes_ci <- ggplot() +
         panel.border = element_blank(),
         axis.line.y = element_line(color = "black"),
         axis.title.y = element_text(angle = 0, vjust = 0.5, size = 14),
-        legend.position = c(0.5,0.5))
+        legend.position = c(0.75,0.85))
 
-# cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-ggarrange(rab_plot, wab_plot, lob_plot, slopes_ci, ncol=2, nrow=2)
+# Arrange plots
+ggarrange(rab_plot, wab_plot, lob_plot, slopes_ci, ncol=2, nrow=2, labels = c("a","b","c","d"))
 
 # calculate size spectra slope for each study site =====================================================
 site.names <- as.character(unique(fish.df$site_name)) # save site names as a vector
@@ -274,18 +277,20 @@ for(i in 1:length(site.names)){
   covariates.df$b[which(covariates.df$site_name == site.i)] <- PLB.bMLE.b
   covariates.df$b.weight[which(covariates.df$site_name == site.i)] <- inv.var
 }
- 
+
+
+
 # slope (b) in relation to human population gravity ====================================================
 ggplot() +
-  geom_point(data=covariates.df, aes(x=log(Grav_tot), y=b, color=region)) +
-  geom_smooth(data=covariates.df, aes(x=log(Grav_tot), y=b), color="black", method="lm") +
+  geom_point(data=covariates.df, aes(x=log(Grav_tot), y=-log(abs(b)), color=region)) +
+  geom_smooth(data=covariates.df, aes(x=log(Grav_tot), y=-log(abs(b))), color="black", method="lm") +
   theme_classic() +
   labs(x="Human population gravity", y="Size spectra slope (b)") +
   scale_color_discrete(name=NULL, labels=c("Lombok","Raja Ampat","Wakatobi")) +
   # scale_x_continuous(limits = c(0,900), expand = c(0,0)) +
   theme(legend.position = c(0.9,0.9))
 
-lm.1 <- lm(covariates.df$b ~ log(covariates.df$Grav_tot))
+lm.1 <- lm(log(abs(covariates.df$b)) ~ log(covariates.df$Grav_tot))
 summary(lm.1)
 plot(lm.1)
 cooksd <- cooks.distance(lm.1)
@@ -297,14 +302,14 @@ min(covariates.df$b)
 # remove outliers
 tmp.covariates.df <- covariates.df[-c(5,16),] 
 ggplot() +
-  geom_point(data=tmp.covariates.df, aes(x=log(Grav_tot), y=b, color=region)) +
-  geom_smooth(data=tmp.covariates.df, aes(x=log(Grav_tot), y=b), color="black", method="lm") +
+  geom_point(data=tmp.covariates.df, aes(x=log(Grav_tot), y=-log(abs(b)), color=region)) +
+  geom_smooth(data=tmp.covariates.df, aes(x=log(Grav_tot), y=-log(abs(b))), color="black", method="lm") +
   theme_classic() +
   labs(x="log(Human population gravity)", y="Size spectra slope (b)") +
   scale_color_discrete(name=NULL, labels=c("Lombok","Raja Ampat","Wakatobi")) +
   # scale_x_continuous(limits = c(0,900), expand = c(0,0)) +
   theme(legend.position = c(0.9,0.9))
-lm.2 <- lm(tmp.covariates.df$b ~ log(tmp.covariates.df$Grav_tot))
+lm.2 <- lm(-log(abs(tmp.covariates.df$b)) ~ log(tmp.covariates.df$Grav_tot))
 summary(lm.2)
 
 # GAMs =================================================================================================
@@ -589,7 +594,10 @@ fish.sizes.df <- fish.df %>%
   mutate(stderr_ha = stderr * 40) %>%
   ungroup()
 
-fish.sizes.df <- fish.sizes.df %>% mutate(region = fct_relevel(region, "raja_ampat", "wakatobi", "lombok"))
+fish.sizes.df <- fish.sizes.df %>% 
+  mutate(region = fct_relevel(region, "raja_ampat", "wakatobi", "lombok")) %>%
+  mutate(size_cat = as.factor(size_cat)) %>%
+  mutate(size_cat = fct_relevel(size_cat, "small","medium","large"))
 
 ggplot(data = fish.sizes.df, aes(x = size_cat, y = bio_ha, fill = region)) +
   geom_bar(stat = "identity", position = position_dodge()) +
@@ -597,12 +605,12 @@ ggplot(data = fish.sizes.df, aes(x = size_cat, y = bio_ha, fill = region)) +
                 width = 0.2, position = position_dodge(0.9)) +
   theme_classic() +
   scale_y_continuous(expand = c(0,0)) +
-  scale_x_discrete(labels = c("Large", "Medium", "Small")) +
+  scale_x_discrete(labels = c("Small", "Medium", "Large")) +
   scale_fill_manual(values = c("#E69F00", "#56B4E9", "#009E73"),
                     labels = c("Raja Ampat", "Wakatobi", "Lombok"))+
   labs(x = "Size category", y = "Biomass (kg/ha)") +
   theme(legend.title = element_blank(),
-        legend.position = c(0.85,0.8))
+        legend.position = c(0.15,0.85))
   
 # Species abundance for carnivores and herbivores ======================================================
 species.carn <- fish.df %>%
