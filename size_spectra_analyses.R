@@ -278,7 +278,17 @@ for(i in 1:length(site.names)){
   covariates.df$b.weight[which(covariates.df$site_name == site.i)] <- inv.var
 }
 
-
+# Biomass in relation to human population gravity ======================================================
+ggplot() +
+  geom_point(data=covariates.df, aes(x=log(Grav_tot), y=log(mean_bio_hectare), color = region)) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73"),
+                     labels = c("Raja Ampat","Wakatobi","Lombok")) +
+  geom_smooth(data=covariates.df, aes(x=log(Grav_tot), y=log(mean_bio_hectare)), color = "black", method = "lm") +
+  labs(x="log(Human population gravity)", y="log(Biomass [kg/ha])") +
+  theme_classic() +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.2,0.2))
+  
 
 # slope (b) in relation to human population gravity ====================================================
 ggplot() +
