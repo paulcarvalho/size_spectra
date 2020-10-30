@@ -498,7 +498,7 @@ slope_reg = function(){
   p <- ggplot() +
     geom_pointrange(data = divers.df, aes(x = obs_region, y = b, ymin = b_lwr, ymax = b_upr, color = region)) +
     theme_classic() +
-    labs(x = "Observer", y = expression(paste("Size spectra (", italic("b"),")"))) +
+    labs(x = "Observer", y = "Size spectrum slope") +
     scale_x_discrete(labels = c("PC_RA" = "PC", "FS_RA" = "FS", "PC_LO" = "PC", "FS_LO" = "FS", "PS_LO" = "PS")) +
     theme(legend.title = element_blank())
   
