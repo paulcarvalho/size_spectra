@@ -8,9 +8,6 @@
 # Set up ===============================================================================================
 rm(list=ls())
 
-# Directories
-setwd("C:/Users/pgcar/Google Drive/Paul Carvalho/dissertation/chapter 2/analysis/size_spectra")
-
 # Functions
 source("functions.r")
 
